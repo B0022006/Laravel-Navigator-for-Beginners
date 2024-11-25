@@ -1,3 +1,4 @@
+// fetchテスト（これ消されてたらちょっと設定見直し）
 import * as path from "path";
 import * as vscode from "vscode";
 import { workspace, ExtensionContext, commands, window, Uri, Position, Selection } from "vscode";
