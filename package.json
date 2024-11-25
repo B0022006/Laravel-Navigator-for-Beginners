@@ -1,21 +1,28 @@
 {
   "name": "laravel-navigator-for-beginners",
   "displayName": "Laravel Navigator for Beginners",
-  "description": "Help beginners learn Laravel",
-  "author": "REPLACE_ME",
-  "license": "MIT",
-  "version": "0.1.1",
-  "type": "module",
+  "version": "0.1.3",
   "publisher": "RockVillage",
-  "categories": [],
-  "icon": "images/icon.png",
-  "engines": {
-    "vscode": "^1.75.0"
+  "description": "Help beginners learn Laravel",
+  "author": {
+    "name": "RockVillage",
+    "email": "b0022006@ib.yic.ac.jp"
   },
+  "categories": ["Other"],
+  "icon": "images/icon.png",
   "activationEvents": [
     "onStartupFinished"
   ],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
   "main": "./client/out/extension",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/B0022006/Laravel-Navigator-for-Beginners.git"
+  },
   "contributes": {
     "menus": {
       "editor/context": [
