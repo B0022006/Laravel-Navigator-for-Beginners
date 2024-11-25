@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #contentArea > svg {
+            min-width: 100vw;
+            min-height: 100vh;
+            width: auto;
+            height: auto;
+            background-color: white;
+
+            transform-origin: 0 0;
+            transition: transform 0.2s ease;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid;
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
+    </script>
+</head>
+<body>
+    <button id="updateButton" type="button">更新</button>
+    <div id="container">
+        <div id="contentArea" class="mermaid"></div>
+    </div>
+</body>
+<script>
+    const vscode = acquireVsCodeApi();
+    
+    // 更新ボタンのクリックイベント
+    document.getElementById('updateButton').addEventListener('click', () => {
+        vscode.postMessage({
+            command: 'update',
+        });
+    });
+
+    window.addEventListener('load', () => {
+        // Mermaidのコードの受信
+        window.addEventListener('message', event => {
+            document.getElementById("contentArea").removeAttribute('data-processed');
+
+            const message = event.data;
+            console.log(message.text);
+            var contentArea = document.getElementById("contentArea");
+            contentArea.innerHTML = message.text;
+
+            mermaid.run({
+                querySelector: '#contentArea',
+            });
+
+            // マウスオーバー時に'Hello world!'を表示
+            const observer = new MutationObserver(mutations => {
+                for (let mutation of mutations) {
+                    for (let node of mutation.addedNodes) {
+                        if (node.tagName && node.tagName.toLowerCase() === 'svg') {
+                            let svg = node;
+                            let nodes = svg.querySelectorAll('g[class^="node"]');
+                            nodes.forEach(node => {
+                                let title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                                title.textContent = 'Hello world!';
+                                node.appendChild(title);
+                            });
+                            observer.disconnect();
+                        }
+                    }
+                }
+            });
+
+            observer.observe(document.getElementById('contentArea'), { childList: true, subtree: true });
+        });
+    });
+
+    // マウスホイールで拡大縮小
+    let zoomLevel = 1;
+    let zoomStep = 0.0005;
+    document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            zoomLevel += e.deltaY * -zoomStep;
+            zoomLevel = Math.min(Math.max(.1, zoomLevel), 3);
+            document.getElementById("contentArea").style.transform = `scale(${zoomLevel})`;
+        }
+    });
+
+    // ノードクリック時にVSCodeにファイル名と行番号を送信
+    function clickHandler(file, line = null) {
+        vscode.postMessage({
+            command: 'nodeClicked',
+            file: file,
+            line: line,
+        });
+        console.log("送信しました");
+    }
+
+    // メッセージを送信
+    // function consoleLog() {
+    //     vscode.postMessage({
+    //         command: 'consoleLog',
+    //         text: "Hello world!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    //     });
+    // }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            mermaid.run({
+                querySelector: '#contentArea',
+            });
+        }
+    });
+</script>
+</html>

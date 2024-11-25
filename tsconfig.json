@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "module": "ES2020", // または 'es2020' 以上
+    "target": "ES2020", // または 'es2020' 以上
+    "lib": ["esnext"], // 'es2020' 以上でも可
+    "outDir": "out",
+    "rootDir": "src",
+    "sourceMap": true,
+    "incremental": true,
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": false
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    ".vscode-test"
+  ],
+  "references": [
+    { "path": "./client" },
+    { "path": "./server" }
+  ]
+}

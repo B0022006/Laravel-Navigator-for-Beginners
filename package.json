@@ -1,0 +1,142 @@
+{
+  "name": "laravel-navigator-for-beginners",
+  "displayName": "Laravel Navigator for Beginners",
+  "description": "Help beginners learn Laravel",
+  "author": "REPLACE_ME",
+  "license": "MIT",
+  "version": "0.1.1",
+  "type": "module",
+  "publisher": "RockVillage",
+  "categories": [],
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./client/out/extension",
+  "contributes": {
+    "menus": {
+      "editor/context": [
+        {
+          "command": "extension.transMermaid",
+          "when": "isLaravelProject",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.checkVariables",
+          "when": "isLaravelProject",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "laravel-navigator-for-beginners.enableTypoCheck": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable diagnostics"
+        },
+        "laravel-navigator-for-beginners.diagnosticsLevel_tailwind": {
+          "type": "string",
+          "default": "Information",
+          "description": "Diagnostics level",
+          "enum": [
+            "Error",
+            "Warning",
+            "Information",
+            "Hint",
+            "None"
+          ]
+        },
+        "laravel-navigator-for-beginners.diagnosticsLevel_pastTailwind": {
+          "type": "string",
+          "default": "Hint",
+          "description": "Diagnostics level for past Tailwind",
+          "enum": [
+            "Error",
+            "Warning",
+            "Information",
+            "Hint",
+            "None"
+          ]
+        },
+        "laravel-navigator-for-beginners.diagnosticsLevel_directive": {
+          "type": "string",
+          "default": "Information",
+          "description": "Diagnostics level for past Tailwind",
+          "enum": [
+            "Error",
+            "Warning",
+            "Information",
+            "Hint",
+            "None"
+          ]
+        },
+        "laravel-navigator-for-beginners.diagnosticsLevel_htmlTag": {
+          "type": "string",
+          "default": "Information",
+          "description": "Diagnostics level for past Tailwind",
+          "enum": [
+            "Error",
+            "Warning",
+            "Information",
+            "Hint",
+            "None"
+          ]
+        },
+        "laravel-navigator-for-beginners.startUpMermaid": {
+          "type": "boolean",
+          "default": false,
+          "description": "When you open a Laravel project, start Mermaid"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "extension.showWorkspaceFolders",
+        "title": "showWorkspaceFolders"
+      },
+      {
+        "command": "extension.hoge",
+        "title": "hoge"
+      },
+      {
+        "command": "extension.hogehoge",
+        "title": "hogehoge"
+      },
+      {
+        "command": "extension.transMermaid",
+        "title": "transMermaid"
+      },
+      {
+        "command": "extension.crossReference",
+        "title": "crossReference"
+      },
+      {
+        "command": "extension.checkVariables",
+        "title": "checkVariables"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "postinstall": "cd client && npm install && cd ../server && npm install && cd .."
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.7",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@cspell/url": "^8.14.4",
+    "cspell": "^8.15.2",
+    "cspell-lib": "^5.21.2",
+    "glob": "^11.0.0",
+    "php-parser": "^3.1.5",
+    "pluralize": "^8.0.0"
+  }
+}
