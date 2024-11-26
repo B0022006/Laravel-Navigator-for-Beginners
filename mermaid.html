@@ -29,18 +29,44 @@
 </head>
 <body>
     <button id="updateButton" type="button">更新</button>
+    <button id="resetButton" type="button">全強調表示解除</button>
     <div id="container">
         <div id="contentArea" class="mermaid"></div>
     </div>
 </body>
 <script>
     const vscode = acquireVsCodeApi();
-    
+
+    // pathタブの強調表示をする関数
+    function highlightPath(path) {
+        path.style.stroke = 'red'; // 強調表示の色
+        path.style.strokeWidth = '5'; // 強調表示の太さ
+        path.setAttribute('data-highlighted', 'true');
+    }
+    // pathタブの強調表示を解除する関数
+    function unHighlightPath(path) {
+        path.style.stroke = ''; // 元の色に戻す
+        path.style.strokeWidth = ''; // 元の太さに戻す
+        path.removeAttribute('data-highlighted');
+    }
+
     // 更新ボタンのクリックイベント
     document.getElementById('updateButton').addEventListener('click', () => {
         vscode.postMessage({
             command: 'update',
         });
+    });
+
+    // リセットボタンのクリックイベント
+        document.getElementById('resetButton').addEventListener('click', () => {
+        const svg = document.querySelector('#contentArea svg');
+        if (svg) {
+            // 強調表示されているすべてのエッジを取得
+            let highlightedPaths = svg.querySelectorAll('path[data-highlighted="true"]');
+            highlightedPaths.forEach(path => {
+                unHighlightPath(path);
+            });
+        }
     });
 
     window.addEventListener('load', () => {
@@ -57,18 +83,51 @@
                 querySelector: '#contentArea',
             });
 
-            // マウスオーバー時に'Hello world!'を表示
+            // SVG生成後の処理
             const observer = new MutationObserver(mutations => {
                 for (let mutation of mutations) {
                     for (let node of mutation.addedNodes) {
                         if (node.tagName && node.tagName.toLowerCase() === 'svg') {
                             let svg = node;
+
+                            // ノードにタイトルを追加
                             let nodes = svg.querySelectorAll('g[class^="node"]');
                             nodes.forEach(node => {
                                 let title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                                 title.textContent = 'Hello world!';
                                 node.appendChild(title);
                             });
+
+                            // エッジパスにオーバーレイを追加
+                            let edgePaths = svg.querySelectorAll('path.flowchart-link');
+                            edgePaths.forEach(path => {
+                                // オーバーレイ用のパスを作成
+                                let overlay = path.cloneNode();
+
+                                // オーバーレイの属性を設定
+                                overlay.style.strokeWidth = '25'; // クリック領域を広げるために太くする
+                                overlay.style.stroke = 'transparent'; // デバッグのために青色に設定
+                                overlay.setAttribute('fill', 'none');
+                                overlay.style.pointerEvents = 'stroke'; // クリックイベントを有効にする
+
+                                // クリックイベントリスナーを追加
+                                overlay.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+
+                                    // 元の線の色をトグル
+                                    if (path.getAttribute('data-highlighted') === 'true') {
+                                        // 強調表示を解除
+                                        unHighlightPath(path);
+                                    } else {
+                                        // 強調表示
+                                        highlightPath(path);
+                                    }
+                                });
+
+                                // オーバーレイを元のパスの前に挿入
+                                path.parentNode.insertBefore(overlay, path.nextSibling);
+                            });
+
                             observer.disconnect();
                         }
                     }
@@ -100,14 +159,6 @@
         });
         console.log("送信しました");
     }
-
-    // メッセージを送信
-    // function consoleLog() {
-    //     vscode.postMessage({
-    //         command: 'consoleLog',
-    //         text: "Hello world!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-    //     });
-    // }
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {

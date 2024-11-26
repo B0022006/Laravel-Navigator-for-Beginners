@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 
 import { parse } from "./parser7";
-import { transMermaid } from "./transMermaid3";
+import { transMermaid } from "./transMermaid4";
 import { parse_CroRef } from "./parser7_CroRef";
 import { compareVariables, readAnalysisResult, VariableDifferences } from "./croRef3";
 
