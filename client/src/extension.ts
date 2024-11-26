@@ -1,4 +1,3 @@
-// fetchテスト（これ消されてたらちょっと設定見直し）
 import * as path from "path";
 import * as vscode from "vscode";
 import { workspace, ExtensionContext, commands, window, Uri, Position, Selection } from "vscode";
@@ -72,7 +71,6 @@ function hoge(context: ExtensionContext) {
     }
   });
 
-  vscode.window.showInformationMessage('Congratulations, your extension "laravel-navigator-for-beginners" is now active!');
   // コマンド登録: checkVariables
   context.subscriptions.push(
     commands.registerCommand("extension.checkVariables", async () => {
@@ -103,10 +101,10 @@ function hoge(context: ExtensionContext) {
             fs.writeFileSync(outputPath2, JSON.stringify(viewVariables, null, 2));
             fs.writeFileSync(outputPath3, JSON.stringify(controllerVariables, null, 2));
 
-            console.log('outputPath:', outputPath);
-            console.log('---------------------------------');
-            console.log('---------------------------------');
-            vscode.window.showWarningMessage(`変数の矛盾が見つかりました。詳細は${outputPath}を参照してください。`);
+            // console.log('outputPath:', outputPath);
+            // console.log('---------------------------------');
+            // console.log('---------------------------------');
+            vscode.window.showWarningMessage(`問題点が見つかりました。詳細は出力を参照してください。`);
             
             outputChannel.clear();
             outputChannel.appendLine('=== checkVariables Result ===');
@@ -114,7 +112,7 @@ function hoge(context: ExtensionContext) {
             outputChannel.appendLine('==============================');
             outputChannel.show();
           } else {
-            vscode.window.showInformationMessage('変数の矛盾は見つかりませんでした。');
+            vscode.window.showInformationMessage('問題点は見つかりませんでした。');
             outputChannel.clear();
             outputChannel.appendLine('=== checkVariables Result ===');
             outputChannel.appendLine('No inconsistencies found.');

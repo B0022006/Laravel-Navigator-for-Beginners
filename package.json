@@ -29,12 +29,12 @@
         {
           "command": "extension.transMermaid",
           "when": "isLaravelProject",
-          "group": "navigation"
+          "group": "LaravelNavigatorForBeginners@1"
         },
         {
           "command": "extension.checkVariables",
           "when": "isLaravelProject",
-          "group": "navigation"
+          "group": "LaravelNavigatorForBeginners@2"
         }
       ]
     },
