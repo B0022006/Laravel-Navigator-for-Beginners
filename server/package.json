@@ -1,15 +1,18 @@
 {
-  "name": "app-ver4-server",
+  "name": "laravel-navigator-for-beginners-server",
   "description": "",
   "version": "1.0.0",
-  "author": "REPLACE_ME",
+  "author": {
+    "name": "RockVillage",
+    "email": "b0022006@ib.yic.ac.jp"
+  },
   "license": "MIT",
   "engines": {
     "node": "*"
   },
   "repository": {
     "type": "git",
-    "url": "REPLACE_ME"
+    "url": "https://github.com/B0022006/Laravel-Navigator-for-Beginners.git"
   },
   "dependencies": {
     "vscode-languageserver": "^8.1.0",

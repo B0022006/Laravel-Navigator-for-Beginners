@@ -1,13 +1,16 @@
 {
-  "name": "app-ver4-client",
+  "name": "laravel-navigator-for-beginners-client",
   "description": "",
-  "author": "REPLACE_ME",
+  "author": {
+    "name": "RockVillage",
+    "email": "b0022006@ib.yic.ac.jp"
+  },
   "license": "MIT",
   "version": "0.0.1",
-  "publisher": "REPLACE_ME",
+  "publisher": "RockVillage",
   "repository": {
     "type": "git",
-    "url": "REPLACE_ME"
+    "url": "https://github.com/B0022006/Laravel-Navigator-for-Beginners.git"
   },
   "engines": {
     "vscode": "^1.75.0"

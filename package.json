@@ -1,7 +1,7 @@
 {
   "name": "laravel-navigator-for-beginners",
   "displayName": "Laravel Navigator for Beginners",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "publisher": "RockVillage",
   "description": "Help beginners learn Laravel",
   "author": {
@@ -72,7 +72,7 @@
         },
         "laravel-navigator-for-beginners.diagnosticsLevel_directive": {
           "type": "string",
-          "default": "Information",
+          "default": "Hint",
           "description": "Diagnostics level for past Tailwind",
           "enum": [
             "Error",
