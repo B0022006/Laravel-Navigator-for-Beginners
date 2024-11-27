@@ -1,6 +1,11 @@
 # Laravel Navigator for Beginners
-Laravel初学者の開発・学習のサポートを行う拡張機能です。
+Laravel初学者の開発・学習のサポートを行う拡張機能です。  
 現在、開発中のため一部機能に制限があります。
+
+## こういうお困りごとにアプローチ
+- 「blade.phpでタグ、ミスったぽい！！」
+- 「Laravelプロジェクトの全体像が掴めねぇ…」
+- 「プロジェクト全体を一括でエラーがないか調べたい」
 
 ## blade.phpに特化した**構文チェック**機能
 blade.phpファイルのチェックを行います。
@@ -15,19 +20,24 @@ blade.phpファイルのチェックを行います。
 ### 関連設定
 - Diagnostics Level_directive
   - 初期値：Information
-  - blade.phpでのディレクティブのチェック結果の表示を切り替えられます。Noneにすることでディレクティブをチェックしません。
+  - 説明：blade.phpでのディレクティブのチェック結果の表示を切り替えられます。
+  Noneにすることでディレクティブをチェックしません。
 - Diagnostics Level_html Tag
   - 初期値：Information
-  - blade.phpでのタグのチェック結果の表示を切り替えられます。Noneにすることでタグをチェックしません。
+  - 説明：blade.phpでのタグのチェック結果の表示を切り替えられます。
+  Noneにすることでタグをチェックしません。
 - Diagnostics Level_past Tailwind
   - 初期値：Hint
-  - blade.phpでの古いバージョンのtailwindのチェック結果の表示を切り替えられます。Noneにすることで古いバージョンのtailwindをチェックしません。
+  - 説明：blade.phpでの古いバージョンのtailwindのチェック結果の表示を切り替えられます。
+  Noneにすることで古いバージョンのtailwindをチェックしません。
 - Diagnostics Level_tailwind
   - 初期値：Information
-  - blade.phpでのtailwindのチェック結果の表示を切り替えられます。Noneにすることでtailwindをチェックしません。
+  - 説明：blade.phpでのtailwindのチェック結果の表示を切り替えられます。
+  Noneにすることでtailwindをチェックしません。
 - Enable Typo Check
   - 初期値：True(チェックが入っている)
-  - blade.phpでのチェックを一括して切り替えられます。本項目をTrueにしたうえで各項目のDiagnostics LevelをNone以外にすることでチェックします。
+  - 説明：blade.phpでのチェックを一括して切り替えられます。
+  本項目をTrueにしたうえで各項目のDiagnostics LevelをNone以外にすることでチェックします。
   - 構文チェックによる処理負荷を無くしたい場合は本項目のチェックを外してください。
 
 ## Laravelプロジェクトを俯瞰できる**ビジュアル化**機能
@@ -40,7 +50,7 @@ LaravelプロジェクトをMermaidに変換してわかりやすく整理しま
 ### 関連設定
 - Start Up Mermaid
   - 初期値：False（チェックが入っていない）
-  - Trueにした場合、Laravelプロジェクトを開いたときに`transMermaid`を実行します。
+  - 説明：Trueにした場合、Laravelプロジェクトを開いたときに`transMermaid`を実行します。
 
 ## 困ったときの道しるべになる**整合性チェック**機能
 ControllerとViewを解析し、問題となる点がないかチェックします。
