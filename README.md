@@ -40,7 +40,7 @@ LaravelプロジェクトをMermaidに変換してわかりやすく整理しま
 ### 関連設定
 - Start Up Mermaid
   - 初期値：False（チェックが入っていない）
-  - Trueにした場合、Laravelプロジェクトを開いたときにtransMermaidを実行します。
+  - Trueにした場合、Laravelプロジェクトを開いたときに`transMermaid`を実行します。
 
 ## 困ったときの道しるべになる**整合性チェック**機能
 ControllerとViewを解析し、問題となる点がないかチェックします。
