@@ -38,8 +38,8 @@
     const vscode = acquireVsCodeApi();
 
     // pathタブの強調表示をする関数
-    function highlightPath(path) {
-        path.style.stroke = 'red'; // 強調表示の色
+    function highlightPath(path, color = 'red') {
+        path.style.stroke = color; // 強調表示の色
         path.style.strokeWidth = '5'; // 強調表示の太さ
         path.setAttribute('data-highlighted', 'true');
     }
@@ -48,6 +48,26 @@
         path.style.stroke = ''; // 元の色に戻す
         path.style.strokeWidth = ''; // 元の太さに戻す
         path.removeAttribute('data-highlighted');
+        console.log("unHighlighted " + path.id);
+    }
+
+    // 全てのpathタブの強調表示を解除する関数
+    function unHighlightAllPaths() {
+        const svg = document.querySelector('#contentArea svg');
+        if (svg) {
+            // // 強調表示されているすべてのエッジを取得
+            let highlightedPaths = svg.querySelectorAll('path[data-highlighted="true"]');
+            highlightedPaths.forEach(path => {
+                unHighlightPath(path);
+            });
+        }
+    }
+
+    // 強調表示されているかどうかを返す関数
+    function isHighlightedPath(path) {
+        console.log(path.getAttribute('data-highlighted'));
+        console.log(path.getAttribute('data-highlighted') === 'true');
+        return path.getAttribute('data-highlighted') === 'true';
     }
 
     // 更新ボタンのクリックイベント
@@ -58,15 +78,8 @@
     });
 
     // リセットボタンのクリックイベント
-        document.getElementById('resetButton').addEventListener('click', () => {
-        const svg = document.querySelector('#contentArea svg');
-        if (svg) {
-            // 強調表示されているすべてのエッジを取得
-            let highlightedPaths = svg.querySelectorAll('path[data-highlighted="true"]');
-            highlightedPaths.forEach(path => {
-                unHighlightPath(path);
-            });
-        }
+    document.getElementById('resetButton').addEventListener('click', () => {
+        unHighlightAllPaths();
     });
 
     window.addEventListener('load', () => {
@@ -90,14 +103,51 @@
                         if (node.tagName && node.tagName.toLowerCase() === 'svg') {
                             let svg = node;
 
-                            // ノードにタイトルを追加
                             let nodes = svg.querySelectorAll('g[class^="node"]');
                             nodes.forEach(node => {
+                                // ノードにタイトルを追加
                                 let title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                                 title.textContent = 'Hello world!';
                                 node.appendChild(title);
+
+                                // ノードにクリックイベントリスナーを追加
+                                // シングルクリックの処理
+                                node.addEventListener('click', () => {
+                                    const nodeId = node.id;
+                                    console.log('clicked', nodeId);
+
+                                    const match = nodeId.match(/^flowchart-([^-]+)_(.+)-\d+$/);
+                                    if (!match) {
+                                        console.log('not matched');
+                                        return;
+                                    }
+                                    const nodeType = match[1];
+                                    const nodeName = match[2];
+
+                                    const regix = new RegExp(`^L_${nodeType}_${nodeName}_.+|^L_.+_${nodeType}_${nodeName}_\\d+$`);
+                                    const paths = svg.querySelectorAll('path.flowchart-link:not(.clone)');
+
+                                    allHighlightFlag = true;
+                                    paths.forEach(path => {
+                                        if (regix.test(path.id)) {
+                                            if (!isHighlightedPath(path)) allHighlightFlag = false;
+                                            console.log("Highlight " + path.id);
+                                            if (path.id.startsWith(`L_${nodeType}_${nodeName}_`)) {
+                                                highlightPath(path, 'red');
+                                            } else if (path.id.includes(`_${nodeType}_${nodeName}_`)) {
+                                                highlightPath(path, 'blue');
+                                            }
+                                        } else {
+                                            unHighlightPath(path);
+                                        }
+                                    });
+                                    if (allHighlightFlag) {
+                                        unHighlightAllPaths();
+                                    }
+                                });
                             });
 
+                            // 線に対するクリックができるようにする処理
                             // エッジパスにオーバーレイを追加
                             let edgePaths = svg.querySelectorAll('path.flowchart-link');
                             edgePaths.forEach(path => {
@@ -109,6 +159,7 @@
                                 overlay.style.stroke = 'transparent'; // デバッグのために青色に設定
                                 overlay.setAttribute('fill', 'none');
                                 overlay.style.pointerEvents = 'stroke'; // クリックイベントを有効にする
+                                overlay.classList.add('clone'); // クローンであることを示すクラスを追加
 
                                 // クリックイベントリスナーを追加
                                 overlay.addEventListener('click', function(e) {
@@ -150,6 +201,7 @@
         }
     });
 
+    // Mermaidに埋め込まれてるクリックイベントから発生
     // ノードクリック時にVSCodeにファイル名と行番号を送信
     function clickHandler(file, line = null) {
         vscode.postMessage({
@@ -158,6 +210,27 @@
             line: line,
         });
         console.log("送信しました");
+    }
+
+    // ノードクリック時にVSCodeにファイル名と行番号を送信
+    let clickTimer = null;
+    function clickHandler(file, line = null) {
+        if (clickTimer) {
+            // ダブルクリックの処理
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            vscode.postMessage({
+                command: 'nodeClicked',
+                file: file,
+                line: line,
+            });
+            console.log("送信しました");
+        } else {
+            // シングルクリックの処理は他の場所で行う
+            clickTimer = setTimeout(() => {
+                clickTimer = null;
+            }, 200);
+        }
     }
 
     document.addEventListener('visibilitychange', () => {

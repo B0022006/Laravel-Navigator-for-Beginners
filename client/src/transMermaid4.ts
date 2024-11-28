@@ -35,7 +35,7 @@ export function transMermaid(): string {
     return name.replace(/[^a-zA-Z0-9]/g, '_');
   }
 
-  // ノードをフォルダごとにグループ化する関数をトップレベルに移動
+  // ノードをフォルダごとにグループ化する関数
   function groupNodesByFolder<T extends { file?: string }>(
     nodes: { [key: string]: T },
     baseDir: string

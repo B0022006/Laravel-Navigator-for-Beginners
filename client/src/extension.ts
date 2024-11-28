@@ -4,7 +4,7 @@ import { workspace, ExtensionContext, commands, window, Uri, Position, Selection
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 
-import { parse } from "./parser7";
+import { parse } from "./parser8";
 import { transMermaid } from "./transMermaid3";
 import { parse_CroRef } from "./parser7_CroRef";
 import { compareVariables, readAnalysisResult, VariableDifferences } from "./croRef3";
