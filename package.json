@@ -1,7 +1,7 @@
 {
   "name": "laravel-navigator-for-beginners",
   "displayName": "Laravel Navigator for Beginners",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "publisher": "RockVillage",
   "description": "Help beginners learn Laravel",
   "author": {
@@ -10,6 +10,12 @@
   },
   "categories": ["Other"],
   "icon": "images/icon.png",
+  "keywords": [
+    "laravel",
+    "Laravel",
+    "Beginner",
+    "Assistant"
+  ],
   "activationEvents": [
     "onStartupFinished"
   ],

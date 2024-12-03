@@ -32,8 +32,8 @@ export async function parse(projectPath: string): Promise<void> {
     interface RedirectInfo {
         type: 'redirect';
         methods: string[];
-        arguments: any[];
-        target?: string;
+        arguments: any[]; // すべての引数を含める
+        target: string | null; // targetを必須フィールドに変更
         line: number;
     }
 
@@ -107,12 +107,12 @@ export async function parse(projectPath: string): Promise<void> {
                 // リダイレクトの使用を検出
                 let chain = getMethodChain(node);
 
-                if (chain.methods[0] === 'redirect' || chain.methods[0] === 'Redirect') {
+                if (chain.methods[0].toLowerCase() === 'redirect') { // 'redirect' または 'Redirect' を小文字に変換して比較
                     // リダイレクト呼び出しを検出
                     const redirectInfo: RedirectInfo = {
                         type: 'redirect',
-                        methods: chain.methods.slice(1), // 'redirect'または'Redirect'を除いたメソッドチェーン
-                        arguments: chain.arguments.slice(1),
+                        methods: chain.methods.slice(1), // 'redirect'を除いたメソッドチェーン
+                        arguments: chain.arguments.slice(1), // 'redirect'の引数を除く
                         target: null,
                         line: node.loc ? node.loc.start.line : null
                     };
@@ -121,16 +121,61 @@ export async function parse(projectPath: string): Promise<void> {
                     for (let i = 1; i < chain.methods.length; i++) {
                         const method = chain.methods[i];
                         const args = chain.arguments[i];
-                        if (['route', 'to', 'action', 'away', 'back'].includes(method)) {
-                            if (args && args.length > 0 && args[0].kind === 'string') {
-                                redirectInfo.target = args[0].value;
-                                break;
-                            } else if (method === 'back') {
-                                redirectInfo.target = 'back';
-                                break;
+
+                        if (['route', 'to', 'action', 'away', 'back', 'intended'].includes(method)) {
+                            if (args && args.length > 0) {
+                                const firstArg = args[0];
+                                if (firstArg.kind === 'string') {
+                                    redirectInfo.target = firstArg.value;
+                                    break;
+                                } else if (firstArg.kind === 'call' && firstArg.what.name === 'route') {
+                                    // route関数の呼び出しからターゲットを抽出
+                                    if (firstArg.arguments && firstArg.arguments.length > 0 && firstArg.arguments[0].kind === 'string') {
+                                        redirectInfo.target = firstArg.arguments[0].value;
+                                        break;
+                                    }
+                                } else if (method === 'back') {
+                                    redirectInfo.target = 'back';
+                                    break;
+                                }
                             }
                         }
                     }
+
+                    // メソッドチェーンの中でネストされた呼び出しからターゲットを抽出
+                    if (redirectInfo.target === null) {
+                        for (let i = 1; i < chain.methods.length; i++) {
+                            const args = chain.arguments[i];
+                            if (args && args.length > 0) {
+                                const firstArg = args[0];
+                                if (firstArg.kind === 'call') {
+                                    const innerCall = firstArg;
+                                    if (innerCall.what.name === 'route' && innerCall.arguments.length > 0 && innerCall.arguments[0].kind === 'string') {
+                                        redirectInfo.target = innerCall.arguments[0].value;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 単独のredirect呼び出しの場合、最初の引数をtargetとして設定
+                    if (redirectInfo.target === null && chain.arguments.length > 0) {
+                        const firstArg = chain.arguments[0][0];
+                        if (firstArg && firstArg.kind === 'string') {
+                            redirectInfo.target = firstArg.value;
+                        }
+                    }
+
+                    // さらにネストされた引数も処理
+                    redirectInfo.arguments = chain.arguments.slice(1).map((args, index) => {
+                        return args.map((arg: any) => {
+                            if (arg.kind === 'call') {
+                                return extractCallArguments(arg);
+                            }
+                            return arg;
+                        });
+                    });
 
                     result.redirects.push(redirectInfo);
                 }
@@ -213,6 +258,21 @@ export async function parse(projectPath: string): Promise<void> {
             return { methods: methods.reverse(), arguments: argumentsList.reverse() };
         }
 
+        // callノードから引数を抽出する関数
+        function extractCallArguments(callNode: any): any {
+            if (!callNode || callNode.kind !== 'call') return null;
+
+            let callInfo: any = {
+                name: callNode.what.name,
+                arguments: callNode.arguments.map((arg: any) => {
+                    if (arg.kind === 'call') {
+                        return extractCallArguments(arg);
+                    }
+                    return arg;
+                })
+            };
+            return callInfo;
+        }
 
         traverse(ast); // トラバース開始
         return result;

@@ -6,12 +6,14 @@ import * as fsPromises from "fs/promises";
 
 import { parse } from "./parser8";
 import { transMermaid } from "./transMermaid3";
+
 import { parse_CroRef } from "./parser7_CroRef";
 import { compareVariables, readAnalysisResult, VariableDifferences } from "./croRef3";
 
 import { parseViews } from "./viewParser";
 import { parseControllers } from "./controllerParser";
 import { checkInconsistencies } from "./inconsistencyChecker";
+import { convertJsonToJapanese } from "./transVariables";
 
 import {
   LanguageClient,
@@ -92,6 +94,23 @@ function hoge(context: ExtensionContext) {
           // 矛盾をチェック
           const inconsistencies = checkInconsistencies(viewVariables, controllerVariables);
 
+          // タイムスタンプ取得
+          const now = new Date();
+          const options: Intl.DateTimeFormatOptions = {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+          };
+          const localeDateString = now.toLocaleDateString('ja-JP', options);
+
+          // 出力の前置き
+          outputChannel.clear();
+          outputChannel.appendLine('=== checkVariables リザルト ===');
+          outputChannel.appendLine(localeDateString);
+
           if (inconsistencies.length > 0) {
             // 結果をファイルに出力
             const outputPath = path.join(__dirname, 'inconsistencies.json');
@@ -101,24 +120,19 @@ function hoge(context: ExtensionContext) {
             fs.writeFileSync(outputPath2, JSON.stringify(viewVariables, null, 2));
             fs.writeFileSync(outputPath3, JSON.stringify(controllerVariables, null, 2));
 
-            // console.log('outputPath:', outputPath);
-            // console.log('---------------------------------');
-            // console.log('---------------------------------');
             vscode.window.showWarningMessage(`問題点が見つかりました。詳細は出力を参照してください。`);
-            
-            outputChannel.clear();
-            outputChannel.appendLine('=== checkVariables Result ===');
-            outputChannel.appendLine(JSON.stringify(inconsistencies, null, 2));
-            outputChannel.appendLine('==============================');
-            outputChannel.show();
+
+            // 出力
+            outputChannel.appendLine(convertJsonToJapanese(inconsistencies));
           } else {
             vscode.window.showInformationMessage('問題点は見つかりませんでした。');
-            outputChannel.clear();
-            outputChannel.appendLine('=== checkVariables Result ===');
-            outputChannel.appendLine('No inconsistencies found.');
-            outputChannel.appendLine('==============================');
-            outputChannel.show();
+
+            // 出力
+            outputChannel.appendLine('問題点は見つかりませんでした。');
           }
+          // 出力の表示
+          outputChannel.appendLine('==============================');
+          outputChannel.show();
         } catch (error) {
           vscode.window.showErrorMessage(`エラーが発生しました: ${error.message}`);
         }
@@ -266,12 +280,13 @@ function hoge(context: ExtensionContext) {
   // Webviewを開く処理を関数として分離
   function openMermaidPreview(context: ExtensionContext, mermaidCode: string) {
     const panel = window.createWebviewPanel(
-      'mermaidPreview',
-      'Mermaid Preview',
-      vscode.ViewColumn.One,
+      'mermaidPreview', // 識別子
+      'Mermaid Preview',  // タイトル
+      vscode.ViewColumn.Active,  // 表示位置
       {
-        enableScripts: true,
-        retainContextWhenHidden: true
+        enableScripts: true,  // スクリプトを有効化
+        retainContextWhenHidden: true,  // 非表示時も状態を保持
+        enableFindWidget: true, // 検索ウィジェットを有効化
       }
     );
 
@@ -307,18 +322,29 @@ function hoge(context: ExtensionContext) {
             window.showErrorMessage(`Error occurred: ${e.message}`);
           }
         } else if (message?.file) {
-          console.log('message received!!!!');
+          // Mermaidのセルをクリックされたとき、ファイルパスを受信し、ファイルを開く
+          console.log('message received');
           console.log(message.file);
           const uri = Uri.file(message.file);
           if (fs.existsSync(uri.fsPath)) {
             workspace.openTextDocument(uri).then(doc => {
               console.log(doc);
+              const editorCount = vscode.window.visibleTextEditors.length;
+              // 行番号もある場合、そのファイルの行にフォーカスする
               if (message.line) {
                 const position = new Position(message.line - 1, 0); // 行番号は0始まりなので-1する
                 const selection = new Selection(position, position);
-                window.showTextDocument(doc, { selection });
+                if (editorCount > 1) {
+                  window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside, selection });
+                } else {
+                  window.showTextDocument(doc, { selection });
+                }
               } else {
-                window.showTextDocument(doc);
+                if (editorCount > 1) {
+                  window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside });
+                } else {
+                  window.showTextDocument(doc);
+                } 
               }
             });
           } else {

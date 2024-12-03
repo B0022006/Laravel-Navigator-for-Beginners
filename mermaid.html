@@ -190,16 +190,16 @@
     });
 
     // マウスホイールで拡大縮小
-    let zoomLevel = 1;
-    let zoomStep = 0.0005;
-    document.addEventListener('wheel', function(e) {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            zoomLevel += e.deltaY * -zoomStep;
-            zoomLevel = Math.min(Math.max(.1, zoomLevel), 3);
-            document.getElementById("contentArea").style.transform = `scale(${zoomLevel})`;
-        }
-    });
+    // let zoomLevel = 1;
+    // let zoomStep = 0.0005;
+    // document.addEventListener('wheel', function(e) {
+    //     if (e.ctrlKey) {
+    //         e.preventDefault();
+    //         zoomLevel += e.deltaY * -zoomStep;
+    //         zoomLevel = Math.min(Math.max(.1, zoomLevel), 3);
+    //         document.getElementById("contentArea").style.transform = `scale(${zoomLevel})`;
+    //     }
+    // });
 
     // Mermaidに埋め込まれてるクリックイベントから発生
     // ノードクリック時にVSCodeにファイル名と行番号を送信

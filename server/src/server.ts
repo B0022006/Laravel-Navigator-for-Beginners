@@ -49,6 +49,7 @@ const MODEL_DICTIONARY_PATH = path.resolve(__dirname, 'dict/models.txt');
 const CUSTOM_BLADE_DICTIONARY_PATH = path.resolve(__dirname, 'dict/bladeAppend.txt');
 const SVG_TAG_DICTIONARY_PATH = path.resolve(__dirname, 'dict/svgTag.txt');
 const WHITELIST_FILE_PATH = path.resolve(__dirname, 'dict/whitelist.txt');
+const TAILWIND_DIRECTIVE_DICTIONARY_PATH = path.resolve(__dirname, 'dict/tailwindDirective.txt');
 
 // PHPファイル用の辞書パス（コメントアウト）
 /*
@@ -274,6 +275,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 
   const text = textDocument.getText();
   const defaultCSpellSettings = getDefaultSettings();
+  // デフォルトのホワイトリストを無効化
+  defaultCSpellSettings.allowCompoundWords = false;
+  // defaultCSpellSettings.dictionaryDefinitions = [];
+  defaultCSpellSettings.dictionaries = [];
 
   // ドキュメントごとの設定を取得
   const settings = await getDocumentSettings(textDocument.uri);
@@ -335,9 +340,10 @@ function getBladeSettings(defaultSettings: any): any {
       { name: 'customBladeDictionary', path: CUSTOM_BLADE_DICTIONARY_PATH },
       { name: 'modelDictionary', path: MODEL_DICTIONARY_PATH },
       { name: 'bladeDirectiveDictionary', path: BLADE_DIRECTIVE_DICTIONARY_PATH },
-      { name: 'whitelist', path: WHITELIST_FILE_PATH }
+      { name: 'whitelist', path: WHITELIST_FILE_PATH },
+      { name: 'tailwindDirectiveDictionary', path: TAILWIND_DIRECTIVE_DICTIONARY_PATH }
     ],
-    dictionaries: ['customBladeDictionary', 'modelDictionary', 'bladeDirectiveDictionary', 'whitelist'],
+    dictionaries: ['customBladeDictionary', 'modelDictionary', 'bladeDirectiveDictionary', 'whitelist', 'tailwindDirectiveDictionary'],
     // Bladeディレクティブのみを検証対象とする
     includeRegExpList: [
       /@\w+/g // Bladeディレクティブ（例：@if, @foreach）
