@@ -71,3 +71,34 @@ export function checkInconsistencies(
 
   return inconsistencies;
 }
+
+/**
+ * 使われていないビュー（View）ファイルを検出します。
+ * @param viewVariables ビューで使用されている変数
+ * @param controllerVariables コントローラーから渡されている変数
+ * @returns 使われていないビューのリスト
+ */
+export function findUnusedViewFiles(
+  viewVariables: VariablesMap,
+  controllerVariables: ViewVariableMap
+): { viewName: string; viewFilePath: string }[] {
+  const unusedViews: { viewName: string; viewFilePath: string }[] = [];
+
+  // コントローラーのビュー名を正規化（スラッシュをドットに置換）
+  const normalizedControllerViewNames = new Set<string>();
+  for (const viewName of Object.keys(controllerVariables)) {
+    normalizedControllerViewNames.add(viewName.replace(/\//g, '.'));
+  }
+
+  // ビューごとにチェック
+  for (const [viewName, viewVarData] of Object.entries(viewVariables)) {
+    if (!normalizedControllerViewNames.has(viewName)) {
+      unusedViews.push({
+        viewName,
+        viewFilePath: viewVarData.filePath,
+      });
+    }
+  }
+
+  return unusedViews;
+}

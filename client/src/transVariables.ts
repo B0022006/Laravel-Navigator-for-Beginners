@@ -6,7 +6,6 @@ export function convertJsonToJapanese(data: any[]): string {
     data.forEach((item) => {
         result += `\n`;
         result += `- ビュー名: ${item.viewName}\n`;
-        result += `  - ファイルパス: ${item.viewFilePath}\n`;
 
         // 未定義の変数
         if (item.undefinedVariables && item.undefinedVariables.length > 0) {
@@ -21,6 +20,8 @@ export function convertJsonToJapanese(data: any[]): string {
         } else {
             result += `  - 未使用の変数: なし\n`;
         }
+
+        result += `  - ファイルパス: ${item.viewFilePath}\n`;
     });
 
     // 結果を返す

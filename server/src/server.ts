@@ -68,7 +68,8 @@ const PHP_IGNORE_REGEXP_LIST = [
 */
 
 // HTMLタグ名を抽出する正規表現
-const TAG_NAME_REGEXP = /<([^\s>\/]+)/g; // 修正：終了タグを除外
+const TAG_NAME_REGEXP = /<\/?([^\s>\/]+)/g;
+
 
 // 設定のインターフェースを定義
 interface ExtensionSettings {

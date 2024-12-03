@@ -1,18 +1,22 @@
+// 全般
 import * as path from "path";
 import * as vscode from "vscode";
 import { workspace, ExtensionContext, commands, window, Uri, Position, Selection } from "vscode";
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 
+// ビジュアル化
 import { parse } from "./parser8";
 import { transMermaid } from "./transMermaid3";
 
+// 昔の整合性チェック
 import { parse_CroRef } from "./parser7_CroRef";
 import { compareVariables, readAnalysisResult, VariableDifferences } from "./croRef3";
 
+// 整合性チェック
 import { parseViews } from "./viewParser";
 import { parseControllers } from "./controllerParser";
-import { checkInconsistencies } from "./inconsistencyChecker";
+import { checkInconsistencies, findUnusedViewFiles } from "./inconsistencyChecker";
 import { convertJsonToJapanese } from "./transVariables";
 
 import {
@@ -93,6 +97,8 @@ function hoge(context: ExtensionContext) {
 
           // 矛盾をチェック
           const inconsistencies = checkInconsistencies(viewVariables, controllerVariables);
+          // 未使用のビューファイルを取得
+          const unusedViewFiles = findUnusedViewFiles(viewVariables, controllerVariables);
 
           // タイムスタンプ取得
           const now = new Date();
@@ -124,6 +130,9 @@ function hoge(context: ExtensionContext) {
 
             // 出力
             outputChannel.appendLine(convertJsonToJapanese(inconsistencies));
+            // outputChannel.appendLine('==============================');
+            // outputChannel.appendLine('未使用のビューファイル:');
+            // outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           } else {
             vscode.window.showInformationMessage('問題点は見つかりませんでした。');
 
@@ -358,12 +367,12 @@ function hoge(context: ExtensionContext) {
       context.subscriptions
     );
 
-    panel.onDidChangeViewState(e => {
-      if (e.webviewPanel.visible) {
-        console.log('Webview is visible');
-        sendMessage(panel, mermaidCode);
-      }
-    });
+    // panel.onDidChangeViewState(e => {
+    //   if (e.webviewPanel.visible) {
+    //     console.log('Webview is visible');
+    //     sendMessage(panel, mermaidCode);
+    //   }
+    // });
   }
 
 
