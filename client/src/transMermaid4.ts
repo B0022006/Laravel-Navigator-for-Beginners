@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // 別のモジュールから関数をインポート
-import { processRedirects, Redirect } from './redirectProcessor';
+import { processRedirects, Redirect, generateRedirectedRoutesSubgraph } from './redirectProcessor';
 
 export interface Route {
   method: string;
@@ -28,34 +28,33 @@ export interface Data {
   views: { [key: string]: string };
 }
 
-export function transMermaid(): string {
+// サニタイズ関数
+export function sanitize(name: string): string {
+  return name.replace(/[^a-zA-Z0-9]/g, '_');
+}
 
-  // サニタイズ関数をモジュールのトップレベルに配置
-  function sanitize(name: string): string {
-    return name.replace(/[^a-zA-Z0-9]/g, '_');
-  }
-
-  // ノードをフォルダごとにグループ化する関数
-  function groupNodesByFolder<T extends { file?: string }>(
-    nodes: { [key: string]: T },
-    baseDir: string
-  ): { [folder: string]: string[] } {
-    let folders: { [folder: string]: string[] } = {};
-    for (let nodeName in nodes) {
-      const filePath = nodes[nodeName].file;
-      let folderPath = 'unknown';
-      if (filePath) {
-        const relativePath = path.relative(baseDir, filePath);
-        folderPath = path.dirname(relativePath);
-      }
-      if (!folders[folderPath]) {
-        folders[folderPath] = [];
-      }
-      folders[folderPath].push(nodeName);
+// ノードをフォルダごとにグループ化する関数
+export function groupNodesByFolder<T extends { file?: string }>(
+  nodes: { [key: string]: T },
+  baseDir: string
+): { [folder: string]: string[] } {
+  let folders: { [folder: string]: string[] } = {};
+  for (let nodeName in nodes) {
+    const filePath = nodes[nodeName].file;
+    let folderPath = 'unknown';
+    if (filePath) {
+      const relativePath = path.relative(baseDir, filePath);
+      folderPath = path.dirname(relativePath);
     }
-    return folders;
+    if (!folders[folderPath]) {
+      folders[folderPath] = [];
+    }
+    folders[folderPath].push(nodeName);
   }
+  return folders;
+}
 
+export function transMermaid(): string {
   function generateMermaidCode(data: Data): string {
     let mermaidCode = 'flowchart LR\n\n';
 
@@ -165,7 +164,7 @@ export function transMermaid(): string {
     mermaidCode += generateSubgraph("Views", viewsData, 'view_', viewFolders);
 
     // 新しいサブグラフ "Redirected Routes" を作成
-    let redirectedRoutesData: { [key: string]: { type: 'route' | 'method'; file?: string; line?: number } } = {};
+    let redirectedRoutesData: { [key: string]: { type: 'route' | 'method' | 'url'; file?: string; line?: number } } = {};
 
     // 関係性を定義
     // RoutesからControllersまたはViewsへ
@@ -251,88 +250,8 @@ export function transMermaid(): string {
     return mermaidCode;
   }
 
-  // Redirected Routesのサブグラフを生成する関数
-  function generateRedirectedRoutesSubgraph(
-    graphName: string,
-    nodes: { [key: string]: { type: 'route' | 'method'; file?: string; line?: number } },
-    nodePrefix: string,
-    baseDir: string
-  ): string {
-    let code = '';
-    code += `    subgraph "${graphName}"\n`;
-    code += `        direction LR\n`;
-
-    // ノードをタイプで分ける
-    let routes = [];
-    let methods = [];
-
-    for (let nodeName in nodes) {
-      if (nodes[nodeName].type === 'route') {
-        routes.push(nodeName);
-      } else if (nodes[nodeName].type === 'method') {
-        methods.push(nodeName);
-      }
-    }
-
-    // ルートノードの処理
-    const routeNodes: { [key: string]: { file?: string; line?: number } } = {};
-    routes.forEach(routeName => {
-      routeNodes[routeName] = nodes[routeName];
-    });
-
-    const routeFolders = groupNodesByFolder(routeNodes, baseDir);
-    for (let folder in routeFolders) {
-      code += `        subgraph "${folder}"\n`;
-      code += `            direction LR\n`;
-      routeFolders[folder].forEach(nodeName => {
-        if (nodes[nodeName].type === 'route') {
-          const nodeId = sanitize(nodePrefix + nodeName);
-          const displayName = nodeName;
-          code += `            ${nodeId}["${displayName}"]\n`;
-          const filePath = nodes[nodeName].file;
-          const lineNumber = nodes[nodeName].line;
-          // クリックイベントを設定
-          if (filePath && lineNumber !== undefined) {
-            code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
-          } else if (filePath) {
-            code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
-          } else {
-            code += `            click ${nodeId} call clickHandler("")\n`;
-          }
-        }
-      });
-      code += '        end\n';
-    }
-
-    // Methodsサブグラフの処理
-    if (methods.length > 0) {
-      code += `        subgraph "Methods"\n`;
-      code += `            direction LR\n`;
-      methods.forEach(nodeName => {
-        const nodeId = sanitize(nodePrefix + nodeName);
-        const displayName = nodeName + '()';
-        code += `            ${nodeId}["${displayName}"]\n`;
-        const filePath = nodes[nodeName].file;
-        const lineNumber = nodes[nodeName].line;
-        // クリックイベントを設定
-        if (filePath && lineNumber !== undefined) {
-          code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
-        } else if (filePath) {
-          code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
-        } else {
-          code += `            click ${nodeId} call clickHandler("")\n`;
-        }
-      });
-      code += '        end\n';
-    }
-
-    code += '    end\n\n';
-    return code;
-  }
-
   // 使用例
   const jsonData: Data = JSON.parse(fs.readFileSync(path.join(__dirname, 'output.json'), 'utf-8'));
   const mermaidCode = generateMermaidCode(jsonData);
   return mermaidCode;
-
 }

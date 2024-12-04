@@ -7,7 +7,7 @@ import * as fsPromises from "fs/promises";
 
 // ビジュアル化
 import { parse } from "./parser8";
-import { transMermaid } from "./transMermaid3";
+import { transMermaid } from "./transMermaid4";
 
 // 昔の整合性チェック
 import { parse_CroRef } from "./parser7_CroRef";
@@ -130,9 +130,6 @@ function hoge(context: ExtensionContext) {
 
             // 出力
             outputChannel.appendLine(convertJsonToJapanese(inconsistencies));
-            // outputChannel.appendLine('==============================');
-            // outputChannel.appendLine('未使用のビューファイル:');
-            // outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           } else {
             vscode.window.showInformationMessage('問題点は見つかりませんでした。');
 
@@ -140,6 +137,9 @@ function hoge(context: ExtensionContext) {
             outputChannel.appendLine('問題点は見つかりませんでした。');
           }
           // 出力の表示
+          outputChannel.appendLine('==============================');
+          outputChannel.appendLine('未使用のビューファイル:');
+          outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           outputChannel.appendLine('==============================');
           outputChannel.show();
         } catch (error) {
