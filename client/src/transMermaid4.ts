@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // 別のモジュールから関数をインポート
-import { processRedirects, Redirect, generateRedirectedRoutesSubgraph } from './redirectProcessor';
+import { processRedirects, Redirect, generateRedirectedRoutesSubgraph } from './redirectProcessor2';
 
 export interface Route {
   method: string;

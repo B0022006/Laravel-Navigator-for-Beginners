@@ -118,7 +118,7 @@ export async function parse(projectPath: string): Promise<void> {
                     };
 
                     // リダイレクト先を抽出
-                    for (let i = 1; i < chain.methods.length; i++) {
+                    for (let i = 0; i < chain.methods.length; i++) {
                         const method = chain.methods[i];
                         const args = chain.arguments[i];
 
