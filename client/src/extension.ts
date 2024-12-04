@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 
 // ビジュアル化
-import { parse } from "./parser8";
+import { parse } from "./parser9";
 import { transMermaid } from "./transMermaid4";
 
 // 昔の整合性チェック
@@ -138,7 +138,7 @@ function hoge(context: ExtensionContext) {
           }
           // 出力の表示
           outputChannel.appendLine('==============================');
-          outputChannel.appendLine('未使用のビューファイル:');
+          outputChannel.appendLine('未使用のビューｆｒじふぉえじょファイル:');
           outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           outputChannel.appendLine('==============================');
           outputChannel.show();
