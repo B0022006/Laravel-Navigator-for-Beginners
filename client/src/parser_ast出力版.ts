@@ -66,8 +66,30 @@ export async function parse(projectPath: string): Promise<void> {
         console.log(`ASTを ${astFilePath} に保存しました`);
     }
 
+    // // 親ノードへの参照を設定する関数
+    // function setParentReferences(node: any, parent: any = null) {
+    //     if (!node || typeof node !== 'object') return;
+
+    //     node.parent = parent;
+
+    //     for (const key in node) {
+    //     if (key === 'parent') continue; // 'parent' プロパティをスキップ
+    //     if (node.hasOwnProperty(key)) {
+    //         const child = node[key];
+    //         if (Array.isArray(child)) {
+    //         child.forEach((c) => {
+    //             setParentReferences(c, node);
+    //         });
+    //         } else if (child && typeof child === 'object' && child.kind) {
+    //         setParentReferences(child, node);
+    //         }
+    //     }
+    //     }
+    // }
+
     function analyzePHP(content: string, filePath: string): AnalysisResult {
         const ast = parser.parseCode(content, filePath);
+        // setParentReferences(ast);
         saveAST(filePath, ast).catch((err) => console.error(`ASTの保存中にエラーが発生しました: ${err.message}`));
 
         let result: AnalysisResult = {

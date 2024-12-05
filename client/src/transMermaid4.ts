@@ -54,6 +54,22 @@ export function groupNodesByFolder<T extends { file?: string }>(
   return folders;
 }
 
+export function groupNodesByFile<T extends { file?: string }>(
+  nodes: { [key: string]: T },
+  baseDir: string
+): { [file: string]: string[] } {
+  let files: { [file: string]: string[] } = {};
+  for (let nodeName in nodes) {
+    const filePath = nodes[nodeName].file;
+    const relativePath = filePath ? path.relative(baseDir, filePath) : 'unknown';
+    if (!files[relativePath]) {
+      files[relativePath] = [];
+    }
+    files[relativePath].push(nodeName);
+  }
+  return files;
+}
+
 export function transMermaid(): string {
   function generateMermaidCode(data: Data): string {
     let mermaidCode = 'flowchart LR\n\n';
@@ -140,7 +156,7 @@ export function transMermaid(): string {
     }
 
     // Routesのサブグラフを生成
-    const routeFolders = groupNodesByFolder(data.routes, baseDir);
+    const routeFolders = groupNodesByFile(data.routes, baseDir);
     mermaidCode += generateSubgraph("Routes", data.routes, 'route_', routeFolders);
 
     // Controllersのサブグラフを生成

@@ -68,13 +68,15 @@ export function getMethodChain(node: any): { methods: string[]; arguments: any[]
 // リダイレクトのターゲットを抽出する関数
 export function extractRedirectTarget(node: any): string | null {
   let target: string = null;
+  const targetMethods = ['route', 'redirect', 'to', 'action', 'url', 'redirectto', 'redirectaction', 'away', 'guest', 'intended'];
 
-  function processNode(node: any) {
+  function processNode(node: any, methodNameContext: string | null = null) {
     if (node.kind === 'call' && node.what) {
       let methodName = getMethodName(node.what);
 
-      if (methodName === 'route') {
-        // 'route' メソッドの引数を処理
+      // if (methodName === 'route') {
+      if (methodName && targetMethods.includes(methodName.toLowerCase())) {
+        // メソッドの引数を処理
         if (node.arguments && node.arguments.length > 0) {
           const firstArg = node.arguments[0];
           if (firstArg.kind === 'string') {
@@ -86,7 +88,7 @@ export function extractRedirectTarget(node: any): string | null {
       // 引数を再帰的に処理
       if (node.arguments && Array.isArray(node.arguments)) {
         node.arguments.forEach((arg: any) => {
-          processNode(arg);
+          processNode(arg, methodName);
         });
       }
 
@@ -94,7 +96,7 @@ export function extractRedirectTarget(node: any): string | null {
       processNode(node.what);
     } else if (node.kind === 'string') {
       // 'string' ノードからターゲットを抽出
-      if (!target) {
+      if (!target && methodNameContext && targetMethods.includes(methodNameContext.toLowerCase())) {
         target = node.value;
       }
     } else if (node.kind === 'propertylookup' || node.kind === 'staticlookup') {

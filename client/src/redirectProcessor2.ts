@@ -55,14 +55,14 @@ export function processRedirects(
           line: null
         };
       }
-    } else if (redirect.methods && redirect.methods.length > 0) {
+    // } else if (redirect.methods && redirect.methods.length > 0) {
       // methods が存在する場合、それをメソッドとして扱う
-      const methodName = redirect.methods[0]; // 最初のメソッドを使用
-      const targetNode = sanitize('redirect_route_' + methodName);
-      edges.push(`    ${controllerNode} --> ${targetNode}\n`);
+      // const methodName = redirect.methods[0]; // 最初のメソッドを使用
+      // const targetNode = sanitize('redirect_route_' + methodName);
+      // edges.push(`    ${controllerNode} --> ${targetNode}\n`);
 
       // クリックイベント用にコントローラのファイルと行番号を保存
-      nodes[methodName] = { type: 'method', file: controllerFile, line: redirect.line };
+      // nodes[methodName] = { type: 'method', file: controllerFile, line: redirect.line };
     } else {
       // target も methods も存在しない場合、無視
       // 何もしない
@@ -92,7 +92,7 @@ export function generateRedirectedRoutesSubgraph(
     if (nodes[nodeName].type === 'route') {
       routes.push(nodeName);
     } else if (nodes[nodeName].type === 'method') {
-      methods.push(nodeName);
+      // methods.push(nodeName);
     } else if (nodes[nodeName].type === 'url') {
       urls.push(nodeName);
     }
@@ -143,26 +143,26 @@ export function generateRedirectedRoutesSubgraph(
   }
 
   // Methodsサブグラフの処理
-  if (methods.length > 0) {
-    code += `        subgraph "Methods"\n`;
-    code += `            direction LR\n`;
-    methods.forEach(nodeName => {
-      const nodeId = sanitize(nodePrefix + nodeName);
-      const displayName = nodeName + '()';
-      code += `            ${nodeId}["${displayName}"]\n`;
-      const filePath = nodes[nodeName].file;
-      const lineNumber = nodes[nodeName].line;
-      // クリックイベントを設定
-      if (filePath && lineNumber !== undefined) {
-        code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
-      } else if (filePath) {
-        code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
-      } else {
-        code += `            click ${nodeId} call clickHandler("")\n`;
-      }
-    });
-    code += '        end\n';
-  }
+  // if (methods.length > 0) {
+    // code += `        subgraph "Methods"\n`;
+    // code += `            direction LR\n`;
+    // methods.forEach(nodeName => {
+    //   const nodeId = sanitize(nodePrefix + nodeName);
+    //   const displayName = nodeName + '()';
+    //   code += `            ${nodeId}["${displayName}"]\n`;
+    //   const filePath = nodes[nodeName].file;
+    //   const lineNumber = nodes[nodeName].line;
+    //   // クリックイベントを設定
+    //   if (filePath && lineNumber !== undefined) {
+    //     code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
+    //   } else if (filePath) {
+    //     code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
+    //   } else {
+    //     code += `            click ${nodeId} call clickHandler("")\n`;
+    //   }
+    // });
+    // code += '        end\n';
+  // }
 
   code += '    end\n\n';
   return code;
