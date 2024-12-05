@@ -86,19 +86,34 @@ export async function parse(projectPath: string): Promise<void> {
       views: [],
       redirects: [],
     };
-
+  
+    // メソッド名を再帰的に取得する関数
+    function getMethodName(node: any): string | null {
+      if (!node) return null;
+      if (node.kind === 'identifier' || node.kind === 'name') {
+        return node.name;
+      } else if (node.kind === 'propertylookup') {
+        return getMethodName(node.offset);
+      } else if (node.kind === 'call') {
+        return getMethodName(node.what);
+      }
+      return null;
+    }
+  
     // ASTをトラバース（巡回）して、モデルやビューの呼び出しを抽出
     function traverse(node: any): void {
       if (!node) return;
-
+  
       if (node.kind === 'call') {
+        const methodName = getMethodName(node.what);
+  
         // モデルの使用を検出
-        if (node.what && node.what.name && models[node.what.name]) {
-          result.models.push(node.what.name);
+        if (methodName && models[methodName]) {
+          result.models.push(methodName);
         }
-
+  
         // ビューの使用を検出
-        if (node.what.name === 'view') {
+        if (methodName === 'view') {
           if (
             node.arguments &&
             node.arguments[0] &&
@@ -107,35 +122,35 @@ export async function parse(projectPath: string): Promise<void> {
             result.views.push(node.arguments[0].value);
           }
         }
-
+  
         // リダイレクトの使用を検出
         const redirectInfo = extractRedirectInfo(node, parser);
         if (redirectInfo) {
           result.redirects.push(redirectInfo);
         }
-      } else if (node.kind === 'new') {
-        if (node.what.kind === 'identifier' && models[node.what.name]) {
-          result.models.push(node.what.name);
-        }
       }
-
+  
       // 子ノードもトラバース
-      if (Array.isArray(node.children)) {
-        for (let child of node.children) {
-          traverse(child);
-        }
-      } else {
-        for (let key in node) {
-          if (node[key] && typeof node[key] === 'object') {
-            traverse(node[key]);
+      for (let key in node) {
+        if (node.hasOwnProperty(key)) {
+          const child = node[key];
+          if (Array.isArray(child)) {
+            child.forEach((c) => {
+              if (typeof c === 'object' && c !== null && c.kind) {
+                traverse(c);
+              }
+            });
+          } else if (typeof child === 'object' && child !== null && child.kind) {
+            traverse(child);
           }
         }
       }
     }
-
+  
     traverse(ast);
     return result;
   }
+  
 
   // ルート定義を解析し、ルートとコントローラーのマッピングを抽出
   function analyzeRoutes(filePath: string, content: string): Route[] {

@@ -13,9 +13,10 @@ export interface RedirectInfo {
 // リダイレクトの解析に関する関数を定義
 
 // メソッドチェーンを取得する関数
-export function getMethodChain(node: any): { methods: string[]; arguments: any[][] } {
+export function getMethodChain(node: any): { methods: string[]; arguments: any[][]; initialObject: string | null } {
   let methods: string[] = [];
   let argumentsList: any[][] = [];
+  let initialObject: string | null = null;
 
   function collect(node: any) {
     if (!node) return;
@@ -24,7 +25,7 @@ export function getMethodChain(node: any): { methods: string[]; arguments: any[]
       let args = node.arguments;
 
       if (node.what.kind === 'propertylookup' || node.what.kind === 'staticlookup') {
-        // メソッドチェーン ($obj->method()) を処理
+        // メソッドチェーン ($obj->method() or Class::method()) を処理
         let methodName = '';
         if (node.what.offset.kind === 'identifier') {
           methodName = node.what.offset.name;
@@ -35,6 +36,13 @@ export function getMethodChain(node: any): { methods: string[]; arguments: any[]
         }
         methods.push(methodName);
         argumentsList.push(args);
+
+        // 静的メソッド呼び出しの場合、クラス名を初期オブジェクトとして収集
+        if (node.what.kind === 'staticlookup') {
+          if (node.what.what.kind === 'name') {
+            initialObject = node.what.what.name;
+          }
+        }
 
         collect(node.what.what);
       } else if (node.what.kind === 'call') {
@@ -47,12 +55,14 @@ export function getMethodChain(node: any): { methods: string[]; arguments: any[]
       }
     } else if (node.kind === 'propertylookup' || node.kind === 'staticlookup') {
       collect(node.what);
+    } else if (node.kind === 'name') {
+      initialObject = node.name;
     }
   }
 
   collect(node);
 
-  return { methods: methods.reverse(), arguments: argumentsList.reverse() };
+  return { methods: methods.reverse(), arguments: argumentsList.reverse(), initialObject };
 }
 
 // リダイレクトのターゲットを抽出する関数
@@ -167,12 +177,15 @@ export function extractRedirectInfo(
   if (node.kind === 'call') {
     let chain = getMethodChain(node);
 
-    if (chain.methods[0] && chain.methods[0].toLowerCase() === 'redirect') {
+    if (
+      (chain.methods[0] && chain.methods[0].toLowerCase() === 'redirect') ||
+      (chain.initialObject && chain.initialObject.toLowerCase() === 'redirect')
+    ) {
       // リダイレクト呼び出しを検出
       const redirectInfo: RedirectInfo = {
         type: 'redirect',
-        methods: chain.methods.slice(1),
-        arguments: chain.arguments.slice(1),
+        methods: chain.methods,
+        arguments: chain.arguments,
         target: null,
         line: node.loc ? node.loc.start.line : null,
       };
