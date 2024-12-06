@@ -338,23 +338,22 @@ function hoge(context: ExtensionContext) {
           if (fs.existsSync(uri.fsPath)) {
             workspace.openTextDocument(uri).then(doc => {
               console.log(doc);
-              const editorCount = vscode.window.visibleTextEditors.length;
-              // 行番号もある場合、そのファイルの行にフォーカスする
-              if (message.line) {
-                const position = new Position(message.line - 1, 0); // 行番号は0始まりなので-1する
-                const selection = new Selection(position, position);
-                if (editorCount > 1) {
-                  window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside, selection });
-                } else {
-                  window.showTextDocument(doc, { selection });
-                }
+              // const editorCount = vscode.window.visibleTextEditors.length;
+              const tagGroup = vscode.window.tabGroups;
+              const activeGroup = tagGroup.activeTabGroup.viewColumn;
+              const isRightMostEditor = tagGroup.all.length === activeGroup;
+
+              const panelSetting = {};
+              if (isRightMostEditor) {
+                panelSetting['viewColumn'] = vscode.ViewColumn.One;
               } else {
-                if (editorCount > 1) {
-                  window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside });
-                } else {
-                  window.showTextDocument(doc);
-                } 
+                panelSetting['viewColumn'] = vscode.ViewColumn.Beside;
               }
+              if (message.line) {
+                panelSetting['selection'] = new vscode.Range(message.line - 1, 0, message.line - 1, 0);
+              }
+
+              vscode.window.showTextDocument(doc, panelSetting);
             });
           } else {
             vscode.window.showErrorMessage('File not found: ' + message.file);
