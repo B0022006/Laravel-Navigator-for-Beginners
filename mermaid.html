@@ -57,6 +57,7 @@
         path.style.stroke = color; // 強調表示の色
         path.style.strokeWidth = '5'; // 強調表示の太さ
         path.setAttribute('data-highlighted', 'true');
+        console.log("highlighted " + path.id);
     }
     // pathタブの強調表示を解除する関数
     function unHighlightPath(path) {
@@ -146,7 +147,6 @@
                                     paths.forEach(path => {
                                         if (regix.test(path.id)) {
                                             if (!isHighlightedPath(path)) allHighlightFlag = false;
-                                            console.log("Highlight " + path.id);
                                             if (path.id.startsWith(`L_${nodeType}_${nodeName}_`)) {
                                                 highlightPath(path, 'red');
                                             } else if (path.id.includes(`_${nodeType}_${nodeName}_`)) {
@@ -214,12 +214,7 @@
 
         // ボタンの背景色を設定
         try {
-            const buttonColor = window.getComputedStyle(document.body).backgroundColor;
-            const rgbaMatch = buttonColor.match(/rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/);
-            button.style.backgroundColor = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, 0.5)`;
-            
-            // console.log("ボタンの色" + buttonColor);
-            // button.style.backgroundColor = buttonColor;
+            button.style.backgroundColor = 'rgb(from var(--vscode-editor-background) r g b / 0.5)';
         } catch (e) {
             button.style.backgroundColor = 'white';
         }
@@ -238,16 +233,6 @@
     });
 
     // Mermaidに埋め込まれてるクリックイベントから発生
-    // ノードクリック時にVSCodeにファイル名と行番号を送信
-    function clickHandler(file, line = null) {
-        vscode.postMessage({
-            command: 'nodeClicked',
-            file: file,
-            line: line,
-        });
-        console.log("送信しました");
-    }
-
     // ノードクリック時にVSCodeにファイル名と行番号を送信
     let clickTimer = null;
     function clickHandler(file, line = null) {
