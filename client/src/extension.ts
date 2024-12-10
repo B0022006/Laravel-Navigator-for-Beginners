@@ -4,6 +4,12 @@ import * as vscode from "vscode";
 import { workspace, ExtensionContext, commands, window, Uri, Position, Selection } from "vscode";
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  TransportKind,
+} from "vscode-languageclient/node";
 
 // ビジュアル化
 import { parse } from "./parser9";
@@ -18,13 +24,6 @@ import { parseViews } from "./viewParser";
 import { parseControllers } from "./controllerParser";
 import { checkInconsistencies, findUnusedViewFiles } from "./inconsistencyChecker";
 import { convertJsonToJapanese } from "./transVariables";
-
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  TransportKind,
-} from "vscode-languageclient/node";
 
 let client: LanguageClient;
 
@@ -137,9 +136,9 @@ function hoge(context: ExtensionContext) {
             outputChannel.appendLine('問題点は見つかりませんでした。');
           }
           // 出力の表示
-          outputChannel.appendLine('==============================');
-          outputChannel.appendLine('未使用のビューｆｒじふぉえじょファイル:');
-          outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
+          // outputChannel.appendLine('==============================');
+          // outputChannel.appendLine('未使用のビューファイル:');
+          // outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           outputChannel.appendLine('==============================');
           outputChannel.show();
         } catch (error) {
