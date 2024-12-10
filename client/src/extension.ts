@@ -12,7 +12,7 @@ import {
 } from "vscode-languageclient/node";
 
 // ビジュアル化
-import { parse } from "./parser9";
+import { parse } from "./parser/parser";
 import { transMermaid } from "./transMermaid4";
 
 // 昔の整合性チェック
@@ -22,8 +22,10 @@ import { compareVariables, readAnalysisResult, VariableDifferences } from "./cro
 // 整合性チェック
 import { parseViews } from "./viewParser";
 import { parseControllers } from "./controllerParser";
-import { checkInconsistencies, findUnusedViewFiles } from "./inconsistencyChecker";
-import { convertJsonToJapanese } from "./transVariables";
+import { checkInconsistencies, findUnusedViewFiles, findNonexistentViewFiles } from "./inconsistencyChecker2";
+import { convertJsonToJapanese_variable, convertJsonToJapanese_unUsed, convertJsonToJapanese_nonexistentViews } from "./transVariables";
+import { json } from "stream/consumers";
+import { exec } from "child_process";
 
 let client: LanguageClient;
 
@@ -76,6 +78,32 @@ function hoge(context: ExtensionContext) {
     }
   });
 
+  async function execParse() {
+    const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
+    const outputFilePath = path.join(__dirname, 'logTest.txt');
+    await fsPromises.writeFile(outputFilePath, workspacePath, 'utf-8');
+
+    if (!workspacePath) {
+      window.showErrorMessage('Error: Workspace path is not defined');
+      return;
+    }
+
+    try {
+      // 進捗メッセージの表示
+      window.showInformationMessage('Starting parser...');
+
+      // parserの実行が完了するまで待機
+      await parse(workspacePath); // 直接awaitで待機
+
+      console.log('Parser done');
+      window.showInformationMessage('Parser finished successfully.');
+    } catch (e) {
+      // エラーメッセージの改善
+      console.error(`An error occurred: ${e.message}`);
+      window.showErrorMessage(`Error occurred: ${e.message}`);
+    }
+  }
+
   // コマンド登録: checkVariables
   context.subscriptions.push(
     commands.registerCommand("extension.checkVariables", async () => {
@@ -84,20 +112,27 @@ function hoge(context: ExtensionContext) {
 
       if (workspaceFolders) {
         const projectRoot = workspaceFolders[0].uri.fsPath;
-        const viewsDir = path.join(projectRoot, 'resources', 'views');
-        const controllersDir = path.join(projectRoot, 'app', 'Http', 'Controllers');
+        // const viewsDir = path.join(projectRoot, 'resources', 'views');
+        // const controllersDir = path.join(projectRoot, 'app', 'Http', 'Controllers');
 
         try {
+          execParse();
           // ビューで使用されている変数を取得
-          const viewVariables = await parseViews(viewsDir, projectRoot);
+          // const viewVariables = await parseViews(viewsDir, projectRoot);
 
           // コントローラーから渡されている変数を取得
-          const controllerVariables = await parseControllers(controllersDir);
+          // const controllerVariables = await parseControllers(controllersDir);
 
           // 矛盾をチェック
-          const inconsistencies = checkInconsistencies(viewVariables, controllerVariables);
+          // const inconsistencies = checkInconsistencies(viewVariables, controllerVariables);
+
+          const jsonData = JSON.parse(fs.readFileSync(path.join(__dirname, 'parser', 'output.json'), 'utf-8'));
+          // 矛盾をチェック
+          const inconsistencies = checkInconsistencies(jsonData);
           // 未使用のビューファイルを取得
-          const unusedViewFiles = findUnusedViewFiles(viewVariables, controllerVariables);
+          const unusedViewFiles = findUnusedViewFiles(jsonData);
+          // 存在しないビューファイルを取得
+          const nonexistentViewFiles = findNonexistentViewFiles(jsonData);
 
           // タイムスタンプ取得
           const now = new Date();
@@ -113,7 +148,7 @@ function hoge(context: ExtensionContext) {
 
           // 出力の前置き
           outputChannel.clear();
-          outputChannel.appendLine('=== checkVariables リザルト ===');
+          outputChannel.appendLine('=== checkVariables リザルト(プロジェクト全体) ===');
           outputChannel.appendLine(localeDateString);
 
           if (inconsistencies.length > 0) {
@@ -122,13 +157,13 @@ function hoge(context: ExtensionContext) {
             const outputPath2 = path.join(__dirname, 'inconsistencies2.json');
             const outputPath3 = path.join(__dirname, 'inconsistencies3.json');
             fs.writeFileSync(outputPath, JSON.stringify(inconsistencies, null, 2));
-            fs.writeFileSync(outputPath2, JSON.stringify(viewVariables, null, 2));
-            fs.writeFileSync(outputPath3, JSON.stringify(controllerVariables, null, 2));
+            // fs.writeFileSync(outputPath2, JSON.stringify(viewVariables, null, 2));
+            // fs.writeFileSync(outputPath3, JSON.stringify(controllerVariables, null, 2));
 
             vscode.window.showWarningMessage(`問題点が見つかりました。詳細は出力を参照してください。`);
 
             // 出力
-            outputChannel.appendLine(convertJsonToJapanese(inconsistencies));
+            outputChannel.appendLine(convertJsonToJapanese_variable(inconsistencies));
           } else {
             vscode.window.showInformationMessage('問題点は見つかりませんでした。');
 
@@ -136,10 +171,14 @@ function hoge(context: ExtensionContext) {
             outputChannel.appendLine('問題点は見つかりませんでした。');
           }
           // 出力の表示
-          // outputChannel.appendLine('==============================');
-          // outputChannel.appendLine('未使用のビューファイル:');
-          // outputChannel.appendLine(JSON.stringify(unusedViewFiles, null, 2));
           outputChannel.appendLine('==============================');
+          outputChannel.appendLine('未使用のビューファイル:');
+          outputChannel.appendLine(convertJsonToJapanese_unUsed(unusedViewFiles));
+          outputChannel.appendLine('==============================');
+          outputChannel.appendLine('使用しているが存在しないビューファイル:');
+          outputChannel.appendLine(convertJsonToJapanese_nonexistentViews(nonexistentViewFiles));
+          outputChannel.appendLine('==============================');
+          
           outputChannel.show();
         } catch (error) {
           vscode.window.showErrorMessage(`エラーが発生しました: ${error.message}`);
@@ -249,24 +288,26 @@ function hoge(context: ExtensionContext) {
   // コマンド登録: transMermaid
   context.subscriptions.push(
     commands.registerCommand("extension.transMermaid", async () => {
-      const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
-      const outputFilePath = path.join(__dirname, 'logTest.txt');
-      await fsPromises.writeFile(outputFilePath, workspacePath, 'utf-8');
+    //   const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
+    //   const outputFilePath = path.join(__dirname, 'logTest.txt');
+    //   await fsPromises.writeFile(outputFilePath, workspacePath, 'utf-8');
 
-      if (!workspacePath) {
-        window.showErrorMessage('Error: Workspace path is not defined');
-        return;
-      }
+    //   if (!workspacePath) {
+    //     window.showErrorMessage('Error: Workspace path is not defined');
+    //     return;
+    //   }
 
       try {
         // 進捗メッセージの表示
-        window.showInformationMessage('Starting parser...');
+        // window.showInformationMessage('Starting parser...');
 
         // parserの実行が完了するまで待機
-        await parse(workspacePath); // 直接awaitで待機
+        // await parse(workspacePath); // 直接awaitで待機
 
-        console.log('Parser done');
-        window.showInformationMessage('Parser finished successfully.');
+        // console.log('Parser done');
+        // window.showInformationMessage('Parser finished successfully.');
+
+        execParse();
 
         // Mermaid変換の実行が完了するまで待機
         const mermaidCode = transMermaid();

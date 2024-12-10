@@ -19,13 +19,20 @@ export interface Controller {
   views: string[];
   file: string;
   redirects?: Redirect[];
+  viewVariables: { [viewName: string]: string[] };
+}
+
+export interface View {
+  file: string;
+  variables: string[];
+  componentVariables?: { [componentName: string]: string[] };
 }
 
 export interface Data {
   routes: { [key: string]: Route };
   controllers: { [key: string]: Controller };
   models: { [key: string]: string };
-  views: { [key: string]: string };
+  views: { [key: string]: View };
 }
 
 // サニタイズ関数
@@ -85,12 +92,11 @@ export function transMermaid(): string {
       allFilePaths.push(data.models[modelName]);
     }
     for (let viewName in data.views) {
-      allFilePaths.push(data.views[viewName]);
+      allFilePaths.push(data.views[viewName].file);
     }
     for (let routeName in data.routes) {
       allFilePaths.push(data.routes[routeName].file);
     }
-
     // 共通のベースディレクトリを計算
     const baseDir = findCommonBasePath(allFilePaths);
 
@@ -121,7 +127,6 @@ export function transMermaid(): string {
 
     // ノード間の矢印を追跡して重複を防ぐ
     let edgesSet = new Set<string>();
-
     // サブグラフを生成する関数
     function generateSubgraph(
       graphName: string,
@@ -154,7 +159,6 @@ export function transMermaid(): string {
       code += '    end\n\n';
       return code;
     }
-
     // Routesのサブグラフを生成
     const routeFolders = groupNodesByFile(data.routes, baseDir);
     mermaidCode += generateSubgraph("Routes", data.routes, 'route_', routeFolders);
@@ -172,12 +176,14 @@ export function transMermaid(): string {
     mermaidCode += generateSubgraph("Models", modelsData, 'model_', modelFolders);
 
     // Viewsのデータを調整してサブグラフを生成
-    let viewsData: { [key: string]: { file?: string } } = {};
-    for (let viewName in data.views) {
-      viewsData[viewName] = { file: data.views[viewName] };
-    }
-    const viewFolders = groupNodesByFolder(viewsData, baseDir);
-    mermaidCode += generateSubgraph("Views", viewsData, 'view_', viewFolders);
+    // let viewsData: { [key: string]: { file?: string } } = {};
+    // for (let viewName in data.views) {
+    //   viewsData[viewName] = { file: data.views[viewName] };
+    // }
+    // const viewFolders = groupNodesByFolder(viewsData, baseDir);
+    // mermaidCode += generateSubgraph("Views", viewsData, 'view_', viewFolders);
+    const viewFolders = groupNodesByFolder(data.views, baseDir);
+    mermaidCode += generateSubgraph("Views", data.views, 'view_', viewFolders);
 
     // 新しいサブグラフ "Redirected Routes" を作成
     let redirectedRoutesData: { [key: string]: { type: 'route' | 'method' | 'url'; file?: string; line?: number } } = {};
@@ -267,7 +273,7 @@ export function transMermaid(): string {
   }
 
   // 使用例
-  const jsonData: Data = JSON.parse(fs.readFileSync(path.join(__dirname, 'output.json'), 'utf-8'));
+  const jsonData: Data = JSON.parse(fs.readFileSync(path.join(__dirname, 'parser', 'output.json'), 'utf-8'));
   const mermaidCode = generateMermaidCode(jsonData);
   return mermaidCode;
 }

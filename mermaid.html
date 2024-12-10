@@ -124,10 +124,10 @@
 
                             let nodes = svg.querySelectorAll('g[class^="node"]');
                             nodes.forEach(node => {
-                                // ノードにタイトルを追加
-                                let title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-                                title.textContent = 'Hello world!';
-                                node.appendChild(title);
+                                // ノードにタイトルを追加(マウスオーバー)
+                                // let title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                                // title.textContent = 'Hello world!';
+                                // node.appendChild(title);
 
                                 // ノードにクリックイベントリスナーを追加
                                 // シングルクリックの処理

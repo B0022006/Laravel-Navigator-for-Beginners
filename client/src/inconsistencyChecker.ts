@@ -102,3 +102,30 @@ export function findUnusedViewFiles(
 
   return unusedViews;
 }
+
+/**
+ * コントローラーから呼び出されているが、存在しないビューを検出します。
+ * @param viewVariables ビューで使用されている変数（解析結果）
+ * @param controllerVariables コントローラーから渡されている変数（解析結果）
+ * @returns 存在しないビューのリスト
+ */
+export function findNonexistentViewFiles(
+  viewVariables: VariablesMap,
+  controllerVariables: ViewVariableMap
+): { viewName: string }[] {
+  const nonexistentViews: { viewName: string }[] = [];
+
+  // viewVariables 内のキーをセット化
+  const existingViewNames = new Set(Object.keys(viewVariables));
+
+  // コントローラーのビュー名を正規化（スラッシュをドットに置換）
+  for (const viewName of Object.keys(controllerVariables)) {
+    const normalizedViewName = viewName.replace(/\//g, '.');
+    if (!existingViewNames.has(normalizedViewName)) {
+      // 該当のビューが存在しない
+      nonexistentViews.push({ viewName: normalizedViewName });
+    }
+  }
+
+  return nonexistentViews;
+}
