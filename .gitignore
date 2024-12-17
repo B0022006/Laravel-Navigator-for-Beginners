@@ -5,4 +5,4 @@ client/server
 tsconfig.tsbuildinfo
 
 client/out/parser/output.json
-dict/auto_create
+dict
