@@ -175,8 +175,8 @@ connection.onInitialized(async () => {
 });
 
 // ワークスペースのデータを初期化する関数
-async function initializeWorkspaceData() {
-  await loadWhitelist();
+function initializeWorkspaceData() {
+  loadWhitelist();
   extractModelNames(workspacePath, DICTIONARY_PATH);
   extractBladeComponentNamesAndFolders(workspacePath, DICTIONARY_PATH);
   // 診断を更新
