@@ -13,19 +13,11 @@ import {
 
 // ビジュアル化
 import { parse } from "./parser/parser";
-import { transMermaid } from "./transMermaid4";
-
-// 昔の整合性チェック
-import { parse_CroRef } from "./parser7_CroRef";
-import { compareVariables, readAnalysisResult, VariableDifferences } from "./croRef3";
+import { transMermaid } from "./transMermaid";
 
 // 整合性チェック
-import { parseViews } from "./viewParser";
-import { parseControllers } from "./controllerParser";
-import { checkInconsistencies, findUnusedViewFiles, findNonexistentViewFiles } from "./inconsistencyChecker2";
+import { checkInconsistencies, findUnusedViewFiles, findNonexistentViewFiles } from "./inconsistencyChecker";
 import { convertJsonToJapanese_variable, convertJsonToJapanese_unUsed, convertJsonToJapanese_nonexistentViews } from "./transVariables";
-import { json } from "stream/consumers";
-import { exec } from "child_process";
 
 let client: LanguageClient;
 
@@ -42,7 +34,7 @@ export function activate(context: ExtensionContext) {
       const requiredPackages = composerJson.require || {};
       if ("laravel/framework" in requiredPackages) {
         vscode.commands.executeCommand('setContext', 'isLaravelProject', true);
-        hoge(context);
+        extensionBody(context);
       } else {
         vscode.commands.executeCommand('setContext', 'isLaravelProject', false);
         return;
@@ -53,7 +45,8 @@ export function activate(context: ExtensionContext) {
   });
 }
 
-function hoge(context: ExtensionContext) {
+function extensionBody(context: ExtensionContext) {
+  // window.showInformationMessage(context.extensionPath);
   let config = vscode.workspace.getConfiguration('laravel-navigator-for-beginners');
   let enableTypoCheck = config.get<boolean>('enableTypoCheck');
   let startUpMermaid = config.get<boolean>('startUpMermaid');
@@ -69,7 +62,7 @@ function hoge(context: ExtensionContext) {
       // 設定が変更された場合、再取得
       config = vscode.workspace.getConfiguration('laravel-navigator-for-beginners');
       enableTypoCheck = config.get<boolean>('enableTypoCheck');
-      vscode.window.showInformationMessage(`Typo check is now ${enableTypoCheck ? 'enabled' : 'disabled'}`);
+      // vscode.window.showInformationMessage(`Typo check is now ${enableTypoCheck ? 'enabled' : 'disabled'}`);
       if (enableTypoCheck) {
         typeCheck();
       } else {
@@ -116,23 +109,16 @@ function hoge(context: ExtensionContext) {
         // const controllersDir = path.join(projectRoot, 'app', 'Http', 'Controllers');
 
         try {
+          // parserの実行
           execParse();
-          // ビューで使用されている変数を取得
-          // const viewVariables = await parseViews(viewsDir, projectRoot);
-
-          // コントローラーから渡されている変数を取得
-          // const controllerVariables = await parseControllers(controllersDir);
-
-          // 矛盾をチェック
-          // const inconsistencies = checkInconsistencies(viewVariables, controllerVariables);
 
           const jsonData = JSON.parse(fs.readFileSync(path.join(__dirname, 'parser', 'output.json'), 'utf-8'));
           // 矛盾をチェック
           const inconsistencies = checkInconsistencies(jsonData);
-          // 未使用のビューファイルを取得
-          const unusedViewFiles = findUnusedViewFiles(jsonData);
           // 存在しないビューファイルを取得
           const nonexistentViewFiles = findNonexistentViewFiles(jsonData);
+          // 未使用のビューファイルを取得
+          const unusedViewFiles = findUnusedViewFiles(jsonData);
 
           // タイムスタンプ取得
           const now = new Date();
@@ -172,115 +158,17 @@ function hoge(context: ExtensionContext) {
           }
           // 出力の表示
           outputChannel.appendLine('==============================');
-          outputChannel.appendLine('未使用のビューファイル:');
-          outputChannel.appendLine(convertJsonToJapanese_unUsed(unusedViewFiles));
-          outputChannel.appendLine('==============================');
           outputChannel.appendLine('使用しているが存在しないビューファイル:');
           outputChannel.appendLine(convertJsonToJapanese_nonexistentViews(nonexistentViewFiles));
+          outputChannel.appendLine('==============================');
+          outputChannel.appendLine('未使用のビューファイル:');
+          outputChannel.appendLine(convertJsonToJapanese_unUsed(unusedViewFiles));
           outputChannel.appendLine('==============================');
           
           outputChannel.show();
         } catch (error) {
           vscode.window.showErrorMessage(`エラーが発生しました: ${error.message}`);
         }
-      }
-    })
-  );
-
-
-  
-  // コマンド登録: crossRef
-  // クロスリファレンスのテスト
-  context.subscriptions.push(
-    commands.registerCommand("extension.crossReference", () => {
-      const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
-
-      if (!workspacePath) {
-        window.showErrorMessage('Error: Workspace path is not defined');
-        return;
-      }
-
-      parse_CroRef(workspacePath);
-    })
-  );
-
-  // フォルダ内のファイル構造をJSONで出力
-  function getFileTree(dir: string): any {
-    const stats = fs.statSync(dir);
-    const info: any = {
-        path: dir,
-        name: path.basename(dir)
-    };
-
-    if (stats.isDirectory()) {
-        info.type = "directory";
-        info.children = fs.readdirSync(dir).map(function (child) {
-            return getFileTree(path.join(dir, child));
-        });
-    } else {
-        info.type = "file";
-    }
-
-    return info;
-  }
-
-  // コマンド登録: showWorkspaceFolders
-  // ワークスペースフォルダの情報をJSONで保存
-  context.subscriptions.push(
-    commands.registerCommand("extension.showWorkspaceFolders", () => {
-      const folders = workspace.workspaceFolders;
-
-      if (folders) {
-        const fileTree = getFileTree(folders[0].uri.fsPath);
-
-        window.showInformationMessage(JSON.stringify(folders, null, 2));
-        const outputPath = path.join(context.extensionPath, 'file_structure.json');
-        fs.writeFileSync(outputPath, JSON.stringify(fileTree, null, 2), 'utf8');
-      } else {
-        window.showInformationMessage("No workspace folders");
-      }
-    })
-  );
-
-  // コマンド登録: hogehoge
-  // parser_modelのテスト用
-  context.subscriptions.push(
-    commands.registerCommand("extension.hogehoge", () => {
-      const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
-
-      if (!workspacePath) {
-        window.showErrorMessage('Error: Workspace path is not defined');
-        return;
-      }
-
-    })
-  );
-
-
-  // コマンド登録: hoge
-  // 変数クロスリファレンスのテスト用
-  context.subscriptions.push(
-    commands.registerCommand("extension.hoge", () => {
-      const jsonFilePath = path.join(__dirname, 'output_CroRef.json');
-
-      const analysisResult = readAnalysisResult(jsonFilePath);
-
-      const differences: VariableDifferences[] = compareVariables(analysisResult);
-
-      // 結果を出力
-      for (const diff of differences) {
-        console.log(`ビュー名: ${diff.view}`);
-        if (diff.variablesSentNotUsed.length > 0) {
-            console.log(`  送信されたが使用されていない変数: ${diff.variablesSentNotUsed.join(', ')}`);
-        } else {
-            console.log(`  送信された変数はすべて使用されています。`);
-        }
-        if (diff.variablesUsedNotSent.length > 0) {
-            console.log(`  使用されたが送信されていない変数: ${diff.variablesUsedNotSent.join(', ')}`);
-        } else {
-            console.log(`  使用された変数はすべて送信されています。`);
-        }
-        console.log(''); // 区切りのための空行
       }
     })
   );
@@ -307,19 +195,19 @@ function hoge(context: ExtensionContext) {
         // console.log('Parser done');
         // window.showInformationMessage('Parser finished successfully.');
 
-        execParse();
+        // await execParse();
 
         // Mermaid変換の実行が完了するまで待機
-        const mermaidCode = transMermaid();
-        if (!mermaidCode) {
-          throw new Error('Mermaid code is empty');
-        }
+        // const mermaidCode = transMermaid();
+        // if (!mermaidCode) {
+        //   throw new Error('Mermaid code is empty');
+        // }
 
         // Webviewを開く処理を関数化
-        openMermaidPreview(context, mermaidCode);
+        // openMermaidPreview(context, mermaidCode);
+        openMermaidPreview(context);
 
       } catch (e) {
-        // エラーメッセージの改善
         console.error(`An error occurred: ${e.message}`);
         window.showErrorMessage(`Error occurred: ${e.message}`);
       }
@@ -327,7 +215,7 @@ function hoge(context: ExtensionContext) {
   );
 
   // Webviewを開く処理を関数として分離
-  function openMermaidPreview(context: ExtensionContext, mermaidCode: string) {
+  function openMermaidPreview(context: ExtensionContext) {
     const panel = window.createWebviewPanel(
       'mermaidPreview', // 識別子
       'Mermaid Preview',  // タイトル
@@ -344,21 +232,25 @@ function hoge(context: ExtensionContext) {
     panel.webview.html = getHtmlContent(htmlPath);
 
     // 拡張機能からメッセージを送信
-    sendMessage(panel, mermaidCode);
+    // sendMessage(panel, mermaidCode);
 
-    // Mermaidのセルをクリックされたとき、そのファイルパスを受信
+    // HTMLから受信
     panel.webview.onDidReceiveMessage(
       async message => {
+        // 初回起動・更新ボタンが押されたとき
         if (message.command === 'update') {
+          console.log('update button clicked');
           try {
-            const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
+            // const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
 
-            if (!workspacePath) {
-              window.showErrorMessage('Error: Workspace path is not defined');
-              return;
-            }
+            // if (!workspacePath) {
+            //   window.showErrorMessage('Error: Workspace path is not defined');
+            //   return;
+            // }
 
-            await parse(workspacePath);
+            // await parse(workspacePath);
+
+            await execParse();
 
             const newMermaidCode = transMermaid();
             if (!newMermaidCode) {
@@ -469,6 +361,7 @@ function hoge(context: ExtensionContext) {
       workspaceFolder: vscode.workspace.workspaceFolders[0],
       initializationOptions: {
         storageUri: context.storageUri?.toString(),
+        extensionPath: context.extensionPath,
       }
     };
 

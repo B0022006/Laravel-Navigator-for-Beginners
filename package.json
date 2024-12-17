@@ -1,7 +1,7 @@
 {
   "name": "laravel-navigator-for-beginners",
   "displayName": "Laravel Navigator for Beginners",
-  "version": "0.2.10",
+  "version": "0.3.0",
   "publisher": "RockVillage",
   "description": "Help beginners learn Laravel",
   "author": {
@@ -111,24 +111,8 @@
     },
     "commands": [
       {
-        "command": "extension.showWorkspaceFolders",
-        "title": "showWorkspaceFolders"
-      },
-      {
-        "command": "extension.hoge",
-        "title": "hoge"
-      },
-      {
-        "command": "extension.hogehoge",
-        "title": "hogehoge"
-      },
-      {
         "command": "extension.transMermaid",
         "title": "transMermaid"
-      },
-      {
-        "command": "extension.crossReference",
-        "title": "crossReference"
       },
       {
         "command": "extension.checkVariables",

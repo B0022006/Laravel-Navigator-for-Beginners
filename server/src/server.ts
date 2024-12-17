@@ -36,20 +36,21 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 
 let workspacePath: string;
+let extensionPath: string;
 
 // ホワイトリストのパスと単語セット
 let whitelistFilePath: string | undefined;
 let whitelist: Set<string> = new Set();
 
-// その他の定数（辞書ファイルのパスを定義）
-const HTML_TAG_DICTIONARY_PATH = path.resolve(__dirname, 'dict/htmlTag.txt');
-const BLADE_DIRECTIVE_DICTIONARY_PATH = path.resolve(__dirname, 'dict/bladeDirective.txt');
-const BLADE_COMPONENT_DICTIONARY_PATH = path.resolve(__dirname, 'dict/bladeComponent.txt');
-const MODEL_DICTIONARY_PATH = path.resolve(__dirname, 'dict/models.txt');
-const CUSTOM_BLADE_DICTIONARY_PATH = path.resolve(__dirname, 'dict/bladeAppend.txt');
-const SVG_TAG_DICTIONARY_PATH = path.resolve(__dirname, 'dict/svgTag.txt');
-const WHITELIST_FILE_PATH = path.resolve(__dirname, 'dict/whitelist.txt');
-const TAILWIND_DIRECTIVE_DICTIONARY_PATH = path.resolve(__dirname, 'dict/tailwindDirective.txt');
+// 辞書ファイルのパスを定義
+let DICTIONARY_PATH: string;
+let HTML_TAG_DICTIONARY_PATH: string;
+let BLADE_DIRECTIVE_DICTIONARY_PATH: string;
+let BLADE_COMPONENT_DICTIONARY_PATH: string;
+let MODEL_DICTIONARY_PATH: string;
+let SVG_TAG_DICTIONARY_PATH: string;
+let TAILWIND_DIRECTIVE_DICTIONARY_PATH: string;
+
 
 // PHPファイル用の辞書パス（コメントアウト）
 /*
@@ -101,6 +102,19 @@ connection.onInitialize((params: InitializeParams) => {
   // ワークスペースのパスを取得
   if (params.workspaceFolders && params.workspaceFolders.length > 0) {
     workspacePath = fileURLToPath(params.workspaceFolders[0].uri);
+  }
+
+  // 拡張機能のパスを取得
+  if (params.initializationOptions.extensionPath) {
+    extensionPath = params.initializationOptions.extensionPath;
+    // 辞書ファイルのパスを設定
+    DICTIONARY_PATH = path.resolve(extensionPath, 'dict');
+    HTML_TAG_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'htmlTag.txt');
+    BLADE_DIRECTIVE_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'bladeDirective.txt');
+    BLADE_COMPONENT_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'bladeComponent.txt');
+    MODEL_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'models.txt');
+    SVG_TAG_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'svgTag.txt');
+    TAILWIND_DIRECTIVE_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'tailwindDirective.txt');
   }
 
   // クライアントの機能を確認
@@ -163,8 +177,8 @@ connection.onInitialized(async () => {
 // ワークスペースのデータを初期化する関数
 async function initializeWorkspaceData() {
   await loadWhitelist();
-  extractModelNames(workspacePath);
-  extractBladeComponentNamesAndFolders(workspacePath);
+  extractModelNames(workspacePath, DICTIONARY_PATH);
+  extractBladeComponentNamesAndFolders(workspacePath, DICTIONARY_PATH);
   // 診断を更新
   connection.languages.diagnostics.refresh();
 }
@@ -314,7 +328,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
   if (languageId === 'blade') {
     let tailwindDiagnostics: Diagnostic[] = []
     // Tailwindクラスの検証
-    tailwindDiagnostics = await validateTailwindClasses(textDocument, whitelist, severity_tailwind, severity_pastTailwind);
+    tailwindDiagnostics = await validateTailwindClasses(textDocument, whitelist, severity_tailwind, severity_pastTailwind, DICTIONARY_PATH);
 
     // HTMLタグ名の検証設定を取得
     let htmlTagDiagnostics: Diagnostic[] = []; 
@@ -338,10 +352,8 @@ function getBladeSettings(defaultSettings: any): any {
   return mergeSettings(defaultSettings, {
     // languageId: 'html',  // BladeファイルをHTMLとして処理
     dictionaryDefinitions: [
-      { name: 'customBladeDictionary', path: CUSTOM_BLADE_DICTIONARY_PATH },
       { name: 'modelDictionary', path: MODEL_DICTIONARY_PATH },
       { name: 'bladeDirectiveDictionary', path: BLADE_DIRECTIVE_DICTIONARY_PATH },
-      { name: 'whitelist', path: WHITELIST_FILE_PATH },
       { name: 'tailwindDirectiveDictionary', path: TAILWIND_DIRECTIVE_DICTIONARY_PATH }
     ],
     dictionaries: ['customBladeDictionary', 'modelDictionary', 'bladeDirectiveDictionary', 'whitelist', 'tailwindDirectiveDictionary'],
@@ -378,7 +390,6 @@ function getHtmlTagSettings(): any {
       { name: 'htmlTagDictionary', path: HTML_TAG_DICTIONARY_PATH },
       { name: 'bladeComponentDictionary', path: BLADE_COMPONENT_DICTIONARY_PATH },
       { name: 'svgTagDictionary', path: SVG_TAG_DICTIONARY_PATH },
-      { name: 'whitelist', path: WHITELIST_FILE_PATH }
     ],
     dictionaries: ['htmlTagDictionary', 'bladeComponentDictionary', 'svgTagDictionary', 'whitelist'],
     includeRegExpList: [TAG_NAME_REGEXP],
@@ -458,8 +469,8 @@ connection.onDidChangeWatchedFiles(async (_change) => {
       connection.languages.diagnostics.refresh();
     } else if (change.type === 1 || change.type === 3) {
       // ファイルが追加または変更された場合、モデル名とコンポーネント名を再抽出
-      extractModelNames(workspacePath);
-      extractBladeComponentNamesAndFolders(workspacePath);
+      extractModelNames(workspacePath, DICTIONARY_PATH);
+      extractBladeComponentNamesAndFolders(workspacePath, DICTIONARY_PATH);
       connection.languages.diagnostics.refresh();
     }
   }

@@ -3,3 +3,6 @@ node_modules
 client/server
 .vscode-test
 tsconfig.tsbuildinfo
+
+client/out/parser/output.json
+dict/auto_create

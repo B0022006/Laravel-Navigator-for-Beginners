@@ -9,10 +9,10 @@ import * as path from "path";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 // 許可された Tailwind クラスを読み込む関数
-async function loadAllowedTailwindClasses(): Promise<{ allowedClasses: Set<string>, allowedParts: Set<string>, pastClasses: Set<string> }> {
-    const tailwindFilePath = path.resolve(__dirname, 'dict/tailwind.txt');
-    const tailwindPartsFilePath = path.resolve(__dirname, 'dict/tailwind_parts.txt');
-    const pastVersionsDirPath = path.resolve(__dirname, 'dict/past_versions');
+async function loadAllowedTailwindClasses(dictionaryPath: string): Promise<{ allowedClasses: Set<string>, allowedParts: Set<string>, pastClasses: Set<string> }> {
+    const tailwindFilePath = path.resolve(dictionaryPath, 'tailwind.txt');
+    const tailwindPartsFilePath = path.resolve(dictionaryPath, 'tailwind_parts.txt');
+    const pastVersionsDirPath = path.resolve(dictionaryPath, 'past_versions');
 
     // メインのTailwindクラスとパーツを読み込む
     const [tailwindData, tailwindPartsData] = await Promise.all([
@@ -140,6 +140,7 @@ export async function validateTailwindClasses(
     whitelist: Set<string>,
     severity: DiagnosticSeverity | undefined,
     severity_pastTailwind: DiagnosticSeverity | undefined,
+    dictionaryPath: string
 ): Promise<Diagnostic[]> {
     const text = textDocument.getText();
 
@@ -151,7 +152,7 @@ export async function validateTailwindClasses(
     let match: RegExpExecArray | null;
 
     // 許可された Tailwind クラスと過去のクラスを非同期で読み込む
-    const { allowedClasses, allowedParts, pastClasses } = await loadAllowedTailwindClasses();
+    const { allowedClasses, allowedParts, pastClasses } = await loadAllowedTailwindClasses(dictionaryPath);
 
     const diagnostics: Diagnostic[] = [];
 

@@ -3,7 +3,7 @@ import * as path from 'path';
 const pluralize = require('pluralize'); // pluralizeライブラリを正しくインポート
 
 // Laravelプロジェクト内のモデルディレクトリを解析し、モデル名と複数形を取得してテキストファイルに出力する関数
-export async function extractModelNames(projectPath: string): Promise<void> {
+export async function extractModelNames(projectPath: string, dictionaryPath: string): Promise<void> {
     const modelDir: string = path.join(projectPath, 'app/Models'); // モデルディレクトリのパス
 
     // ディレクトリ内のPHPファイルを再帰的に読み込む関数
@@ -27,8 +27,8 @@ export async function extractModelNames(projectPath: string): Promise<void> {
             }
         } catch (err) {
             console.error(`ディレクトリ読み込み中にエラーが発生しました: ${(err as Error).message}`);
-            const outputErrorFilePath = path.join(__dirname, 'dict/parseError2.txt');
-            await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
+            // const outputErrorFilePath = path.join(dictionaryPath, 'parseError2.txt');
+            // await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
         }
         return modelNames;
     }
@@ -40,7 +40,7 @@ export async function extractModelNames(projectPath: string): Promise<void> {
     const outputContent = modelNames.map(model => `${model.singular}\n${model.plural}`).join('\n');
 
     // 結果をテキストファイルに改行区切りで保存
-    const outputFilePath = path.join(__dirname, 'dict/models.txt');
+    const outputFilePath = path.join(dictionaryPath, 'auto_create/models.txt');
     await fs.writeFile(outputFilePath, outputContent, 'utf-8');
     console.log(`モデル名と複数形一覧を ${outputFilePath} に保存しました`);
 }

@@ -209,6 +209,10 @@
     
     window.addEventListener('load', adjustContentSetting);
     function adjustContentSetting() {
+        // ロードが終わったときにMermaidのコンテンツを描画
+        const resetButton =  document.getElementById('updateButton');
+        resetButton.click();
+
         // ボタンの高さ分だけコンテンツを下にずらす
         const button = document.querySelector('#buttonContainer');
         const contentArea = document.querySelector('#contentArea');

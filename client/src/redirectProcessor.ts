@@ -1,6 +1,6 @@
 // redirectProcessor.ts
 
-import { Data, sanitize, groupNodesByFolder } from './transMermaid4'; // 必要な型をインポート
+import { Data, sanitize, groupNodesByFolder } from './transMermaid'; // 必要な型をインポート
 
 // Redirect インターフェースをエクスポート
 export interface Redirect {
@@ -17,106 +17,6 @@ export interface RedirectProcessingResult {
   nodes: { [key: string]: { type: 'route' | 'method' | 'url'; file?: string; line?: number } };
 }
 
-// ルート名を抽出する関数
-export function extractRouteNamesFromRedirect(redirect: Redirect): string[] {
-  let routeNames: string[] = [];
-
-  function processNode(node: any) {
-    if (node.kind === 'call' && node.what && node.what.kind === 'name') {
-      const methodName = node.what.name;
-
-      if (methodName === 'route') {
-        // 'route' メソッドの引数を処理
-        if (node.arguments && node.arguments.length > 0) {
-          const firstArg = node.arguments[0];
-          if (firstArg.kind === 'string') {
-            routeNames.push(firstArg.value);
-          }
-        }
-      }
-      // 引数を再帰的に探索してネストされた 'route' 呼び出しを検出
-      if (node.arguments && Array.isArray(node.arguments)) {
-        node.arguments.forEach((arg: any) => {
-          processNode(arg);
-        });
-      }
-    } else if (node.kind === 'array' && node.items) {
-      // 配列の要素を再帰的に処理
-      node.items.forEach((item: any) => {
-        processNode(item);
-      });
-    } else if (node.kind === 'propertylookup' || node.kind === 'staticlookup') {
-      // オブジェクトプロパティのアクセスを処理
-      if (node.what) {
-        processNode(node.what);
-      }
-      if (node.offset) {
-        processNode(node.offset);
-      }
-    } else if (node.kind === 'expressionstatement' && node.expression) {
-      processNode(node.expression);
-    } else if (node.kind === 'assign' && node.right) {
-      processNode(node.right);
-    } else if (node.kind === 'return' && node.expr) {
-      processNode(node.expr);
-    } else if (node.kind === 'bin') {
-      processNode(node.left);
-      processNode(node.right);
-    } else if (node.kind === 'retif') {
-      processNode(node.test);
-      processNode(node.trueExpr);
-      processNode(node.falseExpr);
-    } else if (node.kind === 'if') {
-      processNode(node.test);
-      if (node.body && node.body.children) {
-        node.body.children.forEach((child: any) => {
-          processNode(child);
-        });
-      }
-      if (node.alternate) {
-        processNode(node.alternate);
-      }
-    } else if (node.kind === 'method' && node.body && node.body.children) {
-      node.body.children.forEach((child: any) => {
-        processNode(child);
-      });
-    } else if (node.kind === 'call') {
-      // 呼び出し式を処理
-      if (node.what) {
-        processNode(node.what);
-      }
-      if (node.arguments) {
-        node.arguments.forEach((arg: any) => {
-          processNode(arg);
-        });
-      }
-    } else if (node.kind === 'new' && node.what) {
-      processNode(node.what);
-    } else if (node.kind === 'class' && node.body && node.body.children) {
-      node.body.children.forEach((child: any) => {
-        processNode(child);
-      });
-    }
-    // 必要に応じて他のノードタイプを追加
-  }
-
-  redirect.arguments.forEach((argArray: any[]) => {
-    argArray.forEach((astNode: any) => {
-      processNode(astNode);
-    });
-  });
-
-  return routeNames;
-}
-
-// メソッド名を抽出する関数
-export function extractMethodNameFromRedirect(redirect: Redirect): string | null {
-  if (redirect.target && typeof redirect.target === 'string') {
-    return redirect.target;
-  }
-  return null;
-}
-
 // リダイレクトを処理する関数
 export function processRedirects(
   data: Data,
@@ -131,13 +31,9 @@ export function processRedirects(
   const controllerNode = sanitize('controller_' + controllerName);
 
   redirects.forEach(redirect => {
-    const routeNames = extractRouteNamesFromRedirect(redirect);
-    const methodName = extractMethodNameFromRedirect(redirect);
-
-    let connected = false;
-
-    // 1. ルート名が存在し、ファイルがわかる場合の処理を変更
-    routeNames.forEach(routeName => {
+    if (redirect.target && typeof redirect.target === 'string') {
+      // target が存在する場合、それをルート名として使用
+      const routeName = redirect.target;
       const targetNode = sanitize('redirect_route_' + routeName);
       edges.push(`    ${controllerNode} --> ${targetNode}\n`);
 
@@ -159,23 +55,24 @@ export function processRedirects(
           line: null
         };
       }
-      connected = true;
-    });
-
-    // 2. ルートに接続できない場合のみメソッドを追加
-    if (!connected && methodName) {
-      const targetNode = sanitize('redirect_route_' + methodName);
-      edges.push(`    ${controllerNode} --> ${targetNode}\n`);
+    // } else if (redirect.methods && redirect.methods.length > 0) {
+      // methods が存在する場合、それをメソッドとして扱う
+      // const methodName = redirect.methods[0]; // 最初のメソッドを使用
+      // const targetNode = sanitize('redirect_route_' + methodName);
+      // edges.push(`    ${controllerNode} --> ${targetNode}\n`);
 
       // クリックイベント用にコントローラのファイルと行番号を保存
-      nodes[methodName] = { type: 'method', file: controllerFile, line: redirect.line };
+      // nodes[methodName] = { type: 'method', file: controllerFile, line: redirect.line };
+    } else {
+      // target も methods も存在しない場合、無視
+      // 何もしない
     }
   });
 
   return { edges, nodes };
 }
 
-// Redirected Routesのサブグラフを生成する関数
+// Redirected Routesのサブグラフを生成する関数（変更なし）
 export function generateRedirectedRoutesSubgraph(
   graphName: string,
   nodes: { [key: string]: { type: 'route' | 'method' | 'url'; file?: string; line?: number } },
@@ -195,7 +92,7 @@ export function generateRedirectedRoutesSubgraph(
     if (nodes[nodeName].type === 'route') {
       routes.push(nodeName);
     } else if (nodes[nodeName].type === 'method') {
-      methods.push(nodeName);
+      // methods.push(nodeName);
     } else if (nodes[nodeName].type === 'url') {
       urls.push(nodeName);
     }
@@ -246,26 +143,26 @@ export function generateRedirectedRoutesSubgraph(
   }
 
   // Methodsサブグラフの処理
-  if (methods.length > 0) {
-    code += `        subgraph "Methods"\n`;
-    code += `            direction LR\n`;
-    methods.forEach(nodeName => {
-      const nodeId = sanitize(nodePrefix + nodeName);
-      const displayName = nodeName + '()';
-      code += `            ${nodeId}["${displayName}"]\n`;
-      const filePath = nodes[nodeName].file;
-      const lineNumber = nodes[nodeName].line;
-      // クリックイベントを設定
-      if (filePath && lineNumber !== undefined) {
-        code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
-      } else if (filePath) {
-        code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
-      } else {
-        code += `            click ${nodeId} call clickHandler("")\n`;
-      }
-    });
-    code += '        end\n';
-  }
+  // if (methods.length > 0) {
+    // code += `        subgraph "Methods"\n`;
+    // code += `            direction LR\n`;
+    // methods.forEach(nodeName => {
+    //   const nodeId = sanitize(nodePrefix + nodeName);
+    //   const displayName = nodeName + '()';
+    //   code += `            ${nodeId}["${displayName}"]\n`;
+    //   const filePath = nodes[nodeName].file;
+    //   const lineNumber = nodes[nodeName].line;
+    //   // クリックイベントを設定
+    //   if (filePath && lineNumber !== undefined) {
+    //     code += `            click ${nodeId} call clickHandler("${filePath}", ${lineNumber})\n`;
+    //   } else if (filePath) {
+    //     code += `            click ${nodeId} call clickHandler("${filePath}")\n`;
+    //   } else {
+    //     code += `            click ${nodeId} call clickHandler("")\n`;
+    //   }
+    // });
+    // code += '        end\n';
+  // }
 
   code += '    end\n\n';
   return code;

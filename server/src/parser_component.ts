@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 // Laravelプロジェクト内のbladeコンポーネントファイル名およびフォルダ名を取得してテキストファイルに出力する関数
-export async function extractBladeComponentNamesAndFolders(projectPath: string): Promise<void> {
+export async function extractBladeComponentNamesAndFolders(projectPath: string, dictionaryPath: string): Promise<void> {
     const componentsDir = path.join(projectPath, 'resources/views/components'); // 無名コンポーネントディレクトリ
     const classComponentsDir = path.join(projectPath, 'app/View/Components'); // クラスベースコンポーネントディレクトリ
 
@@ -36,8 +36,8 @@ export async function extractBladeComponentNamesAndFolders(projectPath: string):
             }
         } catch (err) {
             console.error(`ディレクトリ読み込み中にエラーが発生しました: ${(err as Error).message}`);
-            const outputErrorFilePath = path.join(__dirname, 'dict/parseError.txt');
-            await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
+            // const outputErrorFilePath = path.join(dictionaryPath, 'parseError.txt');
+            // await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
         }
         return bladeFilesAndFolders;
     }
@@ -67,8 +67,8 @@ export async function extractBladeComponentNamesAndFolders(projectPath: string):
             }
         } catch (err) {
             console.error(`クラスベースコンポーネントの読み込み中にエラーが発生しました: ${(err as Error).message}`);
-            const outputErrorFilePath = path.join(__dirname, 'dict/parseError.txt');
-            await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
+            // const outputErrorFilePath = path.join(dictionaryPath, 'parseError.txt');
+            // await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
         }
         return classComponentWords;
     }
@@ -86,7 +86,7 @@ export async function extractBladeComponentNamesAndFolders(projectPath: string):
     const outputContent = allComponents.join('\n');
 
     // 結果をテキストファイルに保存
-    const outputFilePath = path.join(__dirname, 'dict/bladeComponent.txt');
+    const outputFilePath = path.join(dictionaryPath, 'auto_create/bladeComponent.txt');
     await fs.writeFile(outputFilePath, outputContent, 'utf-8');
     console.log(`コンポーネントファイル名およびフォルダ名一覧を ${outputFilePath} に保存しました`);
 }
