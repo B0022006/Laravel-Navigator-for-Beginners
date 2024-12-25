@@ -72,20 +72,16 @@ export function processRedirects(
   return { edges, nodes };
 }
 
-// Redirected Routesのサブグラフを生成する関数（変更なし）
+// Redirected Routesのサブグラフを生成する関数
 export function generateRedirectedRoutesSubgraph(
   graphName: string,
   nodes: { [key: string]: { type: 'route' | 'method' | 'url'; file?: string; line?: number } },
   nodePrefix: string,
   baseDir: string
 ): string {
-  let code = '';
-  code += `    subgraph "${graphName}"\n`;
-  code += `        direction LR\n`;
-
   // ノードをタイプで分ける
   let routes: string[] = [];
-  let methods: string[] = [];
+  // let methods: string[] = [];
   let urls: string[] = [];
 
   for (let nodeName in nodes) {
@@ -97,6 +93,15 @@ export function generateRedirectedRoutesSubgraph(
       urls.push(nodeName);
     }
   }
+
+
+  console.log('routes', routes);
+  console.log('urls', urls);
+  if (routes.length == 0 || urls.length == 0) return '';
+
+  let code = '';
+  code += `    subgraph "${graphName}"\n`;
+  code += `        direction LR\n`;
 
   // URLsサブグラフの処理
   if (urls.length > 0) {

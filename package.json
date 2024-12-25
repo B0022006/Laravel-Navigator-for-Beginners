@@ -57,7 +57,7 @@
         "laravel-navigator-for-beginners.diagnosticsLevel_tailwind": {
           "type": "string",
           "default": "Information",
-          "description": "Diagnostics level",
+          "description": "Diagnostics level for Tailwind",
           "enum": [
             "Error",
             "Warning",
@@ -81,7 +81,7 @@
         "laravel-navigator-for-beginners.diagnosticsLevel_directive": {
           "type": "string",
           "default": "Information",
-          "description": "Diagnostics level for past Tailwind",
+          "description": "Diagnostics level for Directive",
           "enum": [
             "Error",
             "Warning",
@@ -93,7 +93,7 @@
         "laravel-navigator-for-beginners.diagnosticsLevel_htmlTag": {
           "type": "string",
           "default": "Information",
-          "description": "Diagnostics level for past Tailwind",
+          "description": "Diagnostics level for HTML tag",
           "enum": [
             "Error",
             "Warning",

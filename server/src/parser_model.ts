@@ -26,7 +26,7 @@ export async function extractModelNames(projectPath: string, dictionaryPath: str
                 }
             }
         } catch (err) {
-            console.error(`ディレクトリ読み込み中にエラーが発生しました: ${(err as Error).message}`);
+            // console.error(`ディレクトリ読み込み中にエラーが発生しました: ${(err as Error).message}`);
             // const outputErrorFilePath = path.join(dictionaryPath, 'parseError2.txt');
             // await fs.writeFile(outputErrorFilePath, (err as Error).message, 'utf-8');
         }

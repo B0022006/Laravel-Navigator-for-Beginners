@@ -22,14 +22,14 @@ import { convertJsonToJapanese_variable, convertJsonToJapanese_unUsed, convertJs
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  const composerPath = path.join(vscode.workspace.rootPath, 'composer.json');
+  try {
+    const composerPath = path.join(vscode.workspace.rootPath, 'composer.json');
 
-  fs.readFile(composerPath, 'utf-8', (err, data) => {
-    if (err) {
-      return;
-    }
+    fs.readFile(composerPath, 'utf-8', (err, data) => {
+      if (err) {
+        return;
+      }
 
-    try {
       const composerJson = JSON.parse(data);
       const requiredPackages = composerJson.require || {};
       if ("laravel/framework" in requiredPackages) {
@@ -39,14 +39,13 @@ export function activate(context: ExtensionContext) {
         vscode.commands.executeCommand('setContext', 'isLaravelProject', false);
         return;
       }
-    } catch (e) {
-      // console.error(e);
-    }
-  });
+    });
+  } catch (e) {
+    // console.error(e);
+  }
 }
 
 function extensionBody(context: ExtensionContext) {
-  // window.showInformationMessage(context.extensionPath);
   let config = vscode.workspace.getConfiguration('laravel-navigator-for-beginners');
   let enableTypoCheck = config.get<boolean>('enableTypoCheck');
   let startUpMermaid = config.get<boolean>('startUpMermaid');
@@ -110,7 +109,7 @@ function extensionBody(context: ExtensionContext) {
 
         try {
           // parserの実行
-          execParse();
+          await execParse();
 
           const jsonData = JSON.parse(fs.readFileSync(path.join(__dirname, 'parser', 'output.json'), 'utf-8'));
           // 矛盾をチェック
@@ -176,25 +175,8 @@ function extensionBody(context: ExtensionContext) {
   // コマンド登録: transMermaid
   context.subscriptions.push(
     commands.registerCommand("extension.transMermaid", async () => {
-    //   const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
-    //   const outputFilePath = path.join(__dirname, 'logTest.txt');
-    //   await fsPromises.writeFile(outputFilePath, workspacePath, 'utf-8');
-
-    //   if (!workspacePath) {
-    //     window.showErrorMessage('Error: Workspace path is not defined');
-    //     return;
-    //   }
 
       try {
-        // 進捗メッセージの表示
-        // window.showInformationMessage('Starting parser...');
-
-        // parserの実行が完了するまで待機
-        // await parse(workspacePath); // 直接awaitで待機
-
-        // console.log('Parser done');
-        // window.showInformationMessage('Parser finished successfully.');
-
         // await execParse();
 
         // Mermaid変換の実行が完了するまで待機
@@ -204,7 +186,6 @@ function extensionBody(context: ExtensionContext) {
         // }
 
         // Webviewを開く処理を関数化
-        // openMermaidPreview(context, mermaidCode);
         openMermaidPreview(context);
 
       } catch (e) {
@@ -241,15 +222,6 @@ function extensionBody(context: ExtensionContext) {
         if (message.command === 'update') {
           console.log('update button clicked');
           try {
-            // const workspacePath = workspace.workspaceFolders[0]?.uri.fsPath;
-
-            // if (!workspacePath) {
-            //   window.showErrorMessage('Error: Workspace path is not defined');
-            //   return;
-            // }
-
-            // await parse(workspacePath);
-
             await execParse();
 
             const newMermaidCode = transMermaid();
@@ -367,8 +339,8 @@ function extensionBody(context: ExtensionContext) {
 
     // Create the language client and start the client.
     client = new LanguageClient(
-      "REPLACE_ME language-server-id",
-      "REPLACE_ME language server name",
+      "Laravel-Navigator-for-Beginners-language-server-id",
+      "Laravel Navigator for Beginners language server name",
       serverOptions,
       clientOptions
     );

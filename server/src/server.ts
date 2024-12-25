@@ -111,10 +111,10 @@ connection.onInitialize((params: InitializeParams) => {
     DICTIONARY_PATH = path.resolve(extensionPath, 'dict');
     HTML_TAG_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'htmlTag.txt');
     BLADE_DIRECTIVE_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'bladeDirective.txt');
-    BLADE_COMPONENT_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'bladeComponent.txt');
-    MODEL_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'models.txt');
     SVG_TAG_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'svgTag.txt');
     TAILWIND_DIRECTIVE_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'tailwindDirective.txt');
+    BLADE_COMPONENT_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'auto_create/bladeComponent.txt');
+    MODEL_DICTIONARY_PATH = path.resolve(DICTIONARY_PATH, 'auto_create/models.txt');
   }
 
   // クライアントの機能を確認
