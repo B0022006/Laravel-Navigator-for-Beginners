@@ -17,6 +17,8 @@ blade.phpファイルのチェックを行います。
 2. `<x-○○>`、`<from>`等、タグ
 3. tailwind css
 
+![syntaxCheck](images/syntaxCheck.gif)
+
 ### 関連設定
 - Diagnostics Level_directive
   - 初期値：Information
@@ -47,6 +49,8 @@ LaravelプロジェクトをMermaidに変換してわかりやすく整理しま
 
 各ノードをクリックすることでそのファイルに遷移することも可能です。
 
+![transMermaid](images/transMermaid.gif)
+
 ### 関連設定
 - Start Up Mermaid
   - 初期値：False（チェックが入っていない）
@@ -60,8 +64,11 @@ ControllerとViewを解析し、問題となる点がないかチェックしま
 現在技術不足のため、参考程度にしてください。
 何かおかしい点があればご連絡いただければ幸いです。
 
+![checkVariables](images/checkVariables.gif)
+
 ### チェックできること
 1. 変数に過不足があるか
-2. 指定しているファイル名のミス(予定)
+2. 使用しているBladeのファイルが存在しないか
+3. 使用していないBladeのファイルがあるか
 
 ### 関連設定
