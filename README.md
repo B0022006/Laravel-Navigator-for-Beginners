@@ -15,7 +15,7 @@ blade.phpファイルのチェックを行います。
 ### チェック対象
 1. `@if`等、bladeディレクティブ
 2. `<x-○○>`、`<from>`等、タグ
-3. tailwind css
+3. TailwindCSS
 
 ![syntaxCheck](images/syntaxCheck.gif)
 
